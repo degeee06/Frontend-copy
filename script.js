@@ -3,8 +3,6 @@ class CopyCraftPro {
     constructor() {
         this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
         this.currentTemplate = null;
-        this.apiKey = ''; // Você vai configurar sua API Key
-        this.apiUrl = 'https://api.deepseek.com/chat/completions'; // URL da API DeepSeek
         this.init();
     }
 
@@ -14,23 +12,14 @@ class CopyCraftPro {
             feather.replace();
         }
 
-        // Load API key from localStorage or prompt
-        this.loadApiKey();
+       
         
         // Initialize event listeners
         this.initializeEventListeners();
         this.loadFavorites();
     }
 
-    loadApiKey() {
-        const savedKey = localStorage.getItem('deepseekApiKey');
-        if (savedKey) {
-            this.apiKey = savedKey;
-            this.updateApiStatus(true);
-        } else {
-            this.showApiKeyModal();
-        }
-    }
+   
 
     showApiKeyModal() {
         const modal = document.createElement('div');
@@ -115,12 +104,6 @@ class CopyCraftPro {
         card.addEventListener('click', (e) => this.selectTemplate(e));
     });
 
-    // API Key management
-    const apiKeyBtn = document.getElementById('manageApiKey');
-    if (apiKeyBtn) {
-        apiKeyBtn.addEventListener('click', () => this.showApiKeyModal());
-    }
-}
 
 selectTemplate(e) {
     const card = e.currentTarget;
@@ -429,11 +412,6 @@ updateTemplateForm(templateType) {
     async generateContent(e) {
         e.preventDefault();
         
-        if (!this.apiKey) {
-            alert('Por favor, configure sua API Key do DeepSeek primeiro.');
-            this.showApiKeyModal();
-            return;
-        }
 
         if (!this.currentTemplate) {
             alert('Por favor, selecione um template primeiro.');
@@ -807,3 +785,4 @@ function showSection(sectionId) {
 window.showSection = showSection;
 
 window.copyCraft = copyCraft;
+
