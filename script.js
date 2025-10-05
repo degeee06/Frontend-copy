@@ -402,7 +402,7 @@ updateTemplateForm(templateType) {
     const prompt = this.buildPrompt(userInput, style, tone);
 
     // ⭐⭐ MUDANÇA AQUI: Chama SEU backend em vez da API diretamente ⭐⭐
-    const response = await fetch('https://backend-copy-1e16.onrender.com', {
+    const response = await fetch('https://backend-copy-1e16.onrender.com/api/generate', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -730,6 +730,7 @@ function showSection(sectionId) {
 window.showSection = showSection;
 
 window.copyCraft = copyCraft;
+
 
 
 
