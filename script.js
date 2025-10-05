@@ -228,53 +228,68 @@ async loadFavoritesFromSupabase() {
     }
 }
 
-    // ⭐⭐ MÉTODOS PARA TRIAL GRATUITO
-    async startTrial() {
+       async startTrial() {
         if (!this.user) return;
         
         try {
+            // ⭐⭐ PRIMEIRO: Tentar buscar trial existente
+            const existingTrial = await this.getUserTrial();
+            
+            if (existingTrial) {
+                console.log('✅ Trial já existe, reutilizando:', existingTrial);
+                return existingTrial;
+            }
+            
+            // ⭐⭐ SEGUNDO: Criar novo apenas se não existir
             const { data, error } = await this.supabase
                 .from('user_trials')
-                .insert([{ user_id: this.user.id }])
+                .insert([{ 
+                    user_id: this.user.id,
+                    started_at: new Date().toISOString(),
+                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'active'
+                }])
                 .select()
                 .single();
                 
             if (error) throw error;
-            console.log('✅ Trial iniciado:', data);
+            
+            console.log('🎉 NOVO Trial criado:', data);
             return data;
+            
         } catch (error) {
             console.error('❌ Erro ao iniciar trial:', error);
-            // Se já existe um trial, apenas retorna sucesso
-            if (error.code === '23505') { // Unique violation
-                return await this.getUserTrial();
-            }
-            throw error;
+            return null;
         }
     }
 
-        async getUserTrial() {
+
+    
+          async getUserTrial() {
         if (!this.user) return null;
         
         try {
+            // ⭐⭐ PEGAR O TRIAL MAIS RECENTE (ordem decrescente por created_at)
             const { data, error } = await this.supabase
                 .from('user_trials')
                 .select('*')
                 .eq('user_id', this.user.id)
-                .maybeSingle(); // ⭐⭐ MUDEI PARA maybeSingle()
+                .order('created_at', { ascending: false }) // ⭐⭐ MAIS RECENTE PRIMEIRO
+                .limit(1) // ⭐⭐ APENAS 1 REGISTRO
+                .maybeSingle();
                 
             if (error) {
                 console.error('❌ Erro ao buscar trial:', error);
                 return null;
             }
             
-            console.log('📊 Trial encontrado:', data);
+            console.log('📊 Trial mais recente:', data);
             return data;
         } catch (error) {
             console.error('❌ Erro ao buscar trial:', error);
             return null;
         }
     }
-
 
     
              async checkTrialStatus() {
@@ -1137,6 +1152,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
