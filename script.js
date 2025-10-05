@@ -4,8 +4,8 @@ class CopyCraftPro {
         this.currentTemplate = null;
         
         // ⭐⭐ NOVO: Configuração do Supabase Auth
-        this.supabaseUrl = 'https://seu-projeto.supabase.co'; // SUA URL DO SUPABASE
-        this.supabaseAnonKey = 'sua-chave-anon-aqui'; // SUA CHAVE ANON DO SUPABASE
+        this.supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co'; // SUA URL DO SUPABASE
+        this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ'; // SUA CHAVE ANON DO SUPABASE
         this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseAnonKey);
         
         this.user = null;
@@ -796,6 +796,7 @@ function showSection(sectionId) {
 window.showSection = showSection;
 
 window.copyCraft = copyCraft;
+
 
 
 
