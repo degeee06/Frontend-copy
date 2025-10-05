@@ -198,16 +198,19 @@
 
     <script src="script.js"></script>
     <script>
-        feather.replace();
-        
-        // Add event listeners for filtering and sorting
-        document.getElementById('filterType').addEventListener('change', function() {
-            copyCraft.loadFavorites();
-        });
-        
-        document.getElementById('sortBy').addEventListener('change', function() {
-            copyCraft.loadFavorites();
-        });
-    </script>
+    feather.replace();
+    
+    // ⭐⭐ CORREÇÃO: Event listeners para filtro e ordenação
+    document.getElementById('filterType')?.addEventListener('change', function() {
+        console.log('🎛️ Filtro alterado para:', this.value);
+        copyCraft.loadFavorites();
+    });
+    
+    document.getElementById('sortBy')?.addEventListener('change', function() {
+        console.log('🎛️ Ordenação alterada para:', this.value);
+        copyCraft.loadFavorites();
+    });
+</script>
 </body>
 </html>
+
