@@ -718,7 +718,8 @@ Formato desejado:
     
     this.favorites.push(favorite);
     this.saveFavorites(); // Agora salva no Supabase
-    
+    // ⭐⭐ CORREÇÃO: Atualizar a visualização IMEDIATAMENTE
+    this.loadFavorites();
     // Visual feedback
     const originalText = button.innerHTML;
     button.innerHTML = '<i data-feather="heart" class="w-4 h-4 mr-2 fill-current"></i>Salvo!';
@@ -891,6 +892,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
