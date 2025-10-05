@@ -140,6 +140,67 @@ class CopyCraftPro {
 } // ⭐⭐ FECHAR o método initializeEventListeners
 
 
+    // ⭐⭐ MÉTODOS SUPABASE PARA FAVORITOS
+async saveFavoritesToSupabase() {
+    if (!this.user) return;
+    
+    try {
+        const { data, error } = await this.supabase
+            .from('user_favorites')
+            .upsert({
+                user_id: this.user.id,
+                favorites: this.favorites,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id'
+            });
+            
+        if (error) throw error;
+        console.log('✅ Favoritos salvos no Supabase');
+    } catch (error) {
+        console.error('❌ Erro ao salvar favoritos:', error);
+        // Fallback para localStorage
+        localStorage.setItem('copycraftFavorites', JSON.stringify(this.favorites));
+    }
+}
+
+async loadFavoritesFromSupabase() {
+    if (!this.user) {
+        // Se não está logado, carrega do localStorage
+        this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
+        return;
+    }
+    
+    try {
+        const { data, error } = await this.supabase
+            .from('user_favorites')
+            .select('favorites')
+            .eq('user_id', this.user.id)
+            .single();
+            
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no data
+        
+        if (data && data.favorites) {
+            this.favorites = data.favorites;
+            console.log('✅ Favoritos carregados do Supabase');
+        } else {
+            // Se não tem dados no Supabase, tenta carregar do localStorage
+            const localFavorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
+            if (localFavorites.length > 0) {
+                this.favorites = localFavorites;
+                // Migra os dados para o Supabase
+                await this.saveFavoritesToSupabase();
+                // Limpa o localStorage
+                localStorage.removeItem('copycraftFavorites');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar favoritos:', error);
+        // Fallback para localStorage
+        this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
+    }
+}
+
 selectTemplate(e) {
     const card = e.currentTarget;
     const templateType = card.dataset.template;
@@ -642,48 +703,63 @@ Formato desejado:
         });
     }
 
-    toggleFavorite(e) {
-        const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
-        const content = button.dataset.content;
-        const type = button.dataset.type;
-        
-        const favorite = {
-            id: Date.now(),
-            type: type,
-            content: content,
-            date: new Date().toLocaleDateString('pt-BR'),
-            title: this.generateFavoriteTitle(content)
-        };
-        
-        this.favorites.push(favorite);
-        this.saveFavorites();
-        
-        // Visual feedback
-        const originalText = button.innerHTML;
-        button.innerHTML = '<i data-feather="heart" class="w-4 h-4 mr-2 fill-current"></i>Favoritado!';
-        button.classList.remove('border-purple-600', 'text-purple-600');
-        button.classList.add('bg-pink-100', 'border-pink-300', 'text-pink-700');
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('bg-pink-100', 'border-pink-300', 'text-pink-700');
-            button.classList.add('border-purple-600', 'text-purple-600');
-            feather.replace();
-        }, 2000);
+   toggleFavorite(e) {
+    const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
+    const content = button.dataset.content;
+    const type = button.dataset.type;
+    
+    // ⭐⭐ CORREÇÃO: Verificar se usuário está logado
+    if (!this.user) {
+        alert('⚠️ Faça login para salvar favoritos!');
+        this.loginWithGoogle();
+        return;
     }
+    
+    const favorite = {
+        id: Date.now(),
+        type: type,
+        content: content,
+        date: new Date().toLocaleDateString('pt-BR'),
+        title: this.generateFavoriteTitle(content),
+        user_id: this.user.id // Vincula ao usuário
+    };
+    
+    this.favorites.push(favorite);
+    this.saveFavorites(); // Agora salva no Supabase
+    
+    // Visual feedback
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i data-feather="heart" class="w-4 h-4 mr-2 fill-current"></i>Salvo!';
+    button.classList.remove('border-purple-600', 'text-purple-600');
+    button.classList.add('bg-green-500', 'border-green-500', 'text-white');
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('bg-green-500', 'border-green-500', 'text-white');
+        button.classList.add('border-purple-600', 'text-purple-600');
+        feather.replace();
+    }, 2000);
+}
 
     generateFavoriteTitle(content) {
         const firstLine = content.split('\n')[0];
         return firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
     }
 
-    saveFavorites() {
-        localStorage.setItem('copycraftFavorites', JSON.stringify(this.favorites));
+   saveFavorites() {
+    // Salva no Supabase (se logado) e no localStorage (como backup)
+    if (this.user) {
+        this.saveFavoritesToSupabase();
     }
+    // Backup no localStorage
+    localStorage.setItem('copycraftFavorites', JSON.stringify(this.favorites));
+}
 
-    loadFavorites() {
-        const favoritesGrid = document.getElementById('favoritesGrid');
-        if (!favoritesGrid) return;
+   async loadFavorites() {
+    await this.loadFavoritesFromSupabase();
+    
+    const favoritesGrid = document.getElementById('favoritesGrid');
+    if (!favoritesGrid) return;
 
         if (this.favorites.length === 0) {
             favoritesGrid.innerHTML = `
@@ -823,6 +899,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
