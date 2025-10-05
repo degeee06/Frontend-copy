@@ -33,23 +33,35 @@ class CopyCraftPro {
         }
     }
 
-    async loginWithGoogle() {
-        try {
-            const { data, error } = await this.supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin // Ou a URL do seu site
-                }
-            });
-            
-            if (error) throw error;
-            
-        } catch (error) {
-            console.error('Erro no login:', error);
-            alert('Erro ao fazer login com Google');
-        }
-    }
+   async loginWithGoogle() {
+    const loginButton = document.getElementById('loginButton');
+    const originalText = loginButton.innerHTML;
+    
+    // Loading state
+    loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2"></i>Conectando...';
+    loginButton.disabled = true;
+    feather.replace();
 
+    try {
+        const { data, error } = await this.supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: 'https://frontend-copy-ten.vercel.app'
+            }
+        });
+        
+        if (error) throw error;
+        
+    } catch (error) {
+        console.error('Erro no login:', error);
+        alert('Erro ao fazer login com Google');
+        
+        // Restore button
+        loginButton.innerHTML = originalText;
+        loginButton.disabled = false;
+        feather.replace();
+    }
+}
     async logout() {
         const { error } = await this.supabase.auth.signOut();
         if (error) {
@@ -61,28 +73,28 @@ class CopyCraftPro {
     }
 
     updateAuthUI() {
-        const loginButton = document.getElementById('loginButton');
-        if (!loginButton) return;
+    const loginButton = document.getElementById('loginButton');
+    if (!loginButton) return;
 
-        if (this.user) {
-            // Usuário logado
-            loginButton.innerHTML = `
-                <img src="${this.user.user_metadata.avatar_url || ''}" 
-                     class="w-6 h-6 rounded-full mr-2" 
-                     onerror="this.style.display='none'">
-                <span>Sair</span>
-            `;
-            loginButton.onclick = () => this.logout();
-        } else {
-            // Usuário não logado
-            loginButton.innerHTML = `
-                <i data-feather="log-in" class="w-4 h-4 mr-2"></i>
-                Login com Google
-            `;
-            loginButton.onclick = () => this.loginWithGoogle();
-            feather.replace();
-        }
+    if (this.user) {
+        // Usuário logado - mostrar nome e avatar
+        const userName = this.user.user_metadata.full_name || this.user.email;
+        loginButton.innerHTML = `
+            <img src="${this.user.user_metadata.avatar_url || ''}" 
+                 class="w-6 h-6 rounded-full mr-2" 
+                 onerror="this.style.display='none'">
+            <span class="hidden sm:inline">${userName.split(' ')[0]}</span>
+        `;
+        loginButton.title = `Sair (${userName})`;
+    } else {
+        // Usuário não logado
+        loginButton.innerHTML = `
+            <i data-feather="log-in" class="w-4 h-4 mr-2"></i>
+            Login com Google
+        `;
+        feather.replace();
     }
+}
    initializeEventListeners() {
     // Template generation form
     const generateForm = document.getElementById('generateForm');
@@ -811,6 +823,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
