@@ -743,13 +743,11 @@ Formato desejado:
         return firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
     }
 
-   saveFavorites() {
-    // Salva no Supabase (se logado) e no localStorage (como backup)
+   async saveFavorites() { // ⭐⭐ Adicionar async
+    // ⭐⭐ CORREÇÃO: Só salva no Supabase se estiver logado e AGUARDA
     if (this.user) {
-        this.saveFavoritesToSupabase();
+        await this.saveFavoritesToSupabase(); // ⭐⭐ Adicionar await
     }
-    // Backup no localStorage
-    localStorage.setItem('copycraftFavorites', JSON.stringify(this.favorites));
 }
 
    async loadFavorites() {
@@ -896,6 +894,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
