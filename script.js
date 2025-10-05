@@ -604,10 +604,10 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-       async generateContent(e) {
+           async generateContent(e) {
         e.preventDefault();
         
-        // ⭐⭐ VERIFICAR SE USUÁRIO ESTÁ LOGADO
+        // ⭐⭐ VERIFICAR SE USUÁRIO ESTÁ LOGADO (ESTOU FALTANDO!)
         if (!this.user) {
             alert('⚠️ Faça login para gerar conteúdos!');
             this.loginWithGoogle();
@@ -630,7 +630,6 @@ updateTemplateForm(templateType) {
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         
-        // Show loading state
         submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin inline w-4 h-4 mr-2"></i>Gerando com IA...';
         submitBtn.disabled = true;
         feather.replace();
@@ -641,12 +640,10 @@ updateTemplateForm(templateType) {
         } catch (error) {
             console.error('Error generating content:', error);
             alert('Erro ao gerar conteúdo. Verifique sua API Key e tente novamente.');
-            // Fallback to sample content
             const sampleContent = this.generateSampleContent();
             this.displayGeneratedContent(sampleContent);
         }
 
-        // Restore button
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
         feather.replace();
@@ -682,7 +679,7 @@ updateTemplateForm(templateType) {
         feather.replace();
     }
 
-    // ⭐⭐ MÉTODO PARA UPGRADE (placeholder)
+   // ⭐⭐ MÉTODO PARA UPGRADE (placeholder)
     upgradeToPro() {
         // Aqui você integraria com um gateway de pagamento
         alert('Redirecionando para página de assinatura...');
@@ -1097,6 +1094,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
