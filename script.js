@@ -62,15 +62,18 @@ class CopyCraftPro {
         feather.replace();
     }
 }
-    async logout() {
-        const { error } = await this.supabase.auth.signOut();
-        if (error) {
-            console.error('Erro no logout:', error);
-        } else {
-            this.user = null;
-            this.updateAuthUI();
-        }
+   async logout() {
+    const { error } = await this.supabase.auth.signOut();
+    if (error) {
+        console.error('Erro no logout:', error);
+    } else {
+        this.user = null;
+        this.favorites = []; // ⭐⭐ LIMPA os favoritos ao deslogar
+        this.updateAuthUI();
+        // Opcional: redirecionar para home
+        window.location.href = 'index.html';
     }
+}
 
     updateAuthUI() {
     const loginButton = document.getElementById('loginButton');
@@ -159,15 +162,13 @@ async saveFavoritesToSupabase() {
         console.log('✅ Favoritos salvos no Supabase');
     } catch (error) {
         console.error('❌ Erro ao salvar favoritos:', error);
-        // Fallback para localStorage
-        localStorage.setItem('copycraftFavorites', JSON.stringify(this.favorites));
     }
 }
 
 async loadFavoritesFromSupabase() {
+    // ⭐⭐ CORREÇÃO: Sempre limpa os favoritos se não está logado
     if (!this.user) {
-        // Se não está logado, carrega do localStorage
-        this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
+        this.favorites = []; // ⭐⭐ LIMPA os favoritos
         return;
     }
     
@@ -184,20 +185,11 @@ async loadFavoritesFromSupabase() {
             this.favorites = data.favorites;
             console.log('✅ Favoritos carregados do Supabase');
         } else {
-            // Se não tem dados no Supabase, tenta carregar do localStorage
-            const localFavorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
-            if (localFavorites.length > 0) {
-                this.favorites = localFavorites;
-                // Migra os dados para o Supabase
-                await this.saveFavoritesToSupabase();
-                // Limpa o localStorage
-                localStorage.removeItem('copycraftFavorites');
-            }
+            this.favorites = []; // ⭐⭐ Se não tem dados, array vazio
         }
     } catch (error) {
         console.error('❌ Erro ao carregar favoritos:', error);
-        // Fallback para localStorage
-        this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
+        this.favorites = []; // ⭐⭐ Em caso de erro, array vazio
     }
 }
 
@@ -899,6 +891,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
