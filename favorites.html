@@ -44,41 +44,46 @@
 </head>
 <body class="bg-slate-900 text-white">
     <!-- Header -->
-<header class="bg-white shadow-sm border-b border-gray-200">
-    <div class="container mx-auto px-4 py-4">
-        <div class="flex justify-between items-center">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                    <i data-feather="zap" class="text-white w-4 h-4"></i>
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                        <i data-feather="zap" class="text-white w-4 h-4"></i>
+                    </div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        CopyCraft Pro
+                    </span>
                 </div>
-                <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    CopyCraft Pro
-                </span>
+
+                <!-- Menu Central -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Início</a>
+                    <a href="index.html#templates" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Templates</a>
+                    <a href="index.html#features" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Recursos</a>
+                    <a href="favorites.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Favoritos</a>
+                </nav>
+
+                <!-- Botões Direita -->
+                <div class="flex items-center space-x-4">
+                    <!-- Botão Upgrade (SEMPRE VISÍVEL) -->
+                    <button onclick="copyCraft.upgradeToPro()" 
+                            class="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all items-center">
+                        <i data-feather="star" class="w-4 h-4 mr-2"></i>
+                        Upgrade
+                    </button>
+
+                    <!-- Botão Login -->
+                    <button id="loginButton" 
+                            class="border border-purple-600 text-purple-600 px-6 py-2 rounded-lg font-bold hover:bg-purple-50 transition duration-300 flex items-center">
+                        <i data-feather="log-in" class="w-4 h-4 mr-2"></i>
+                        Login com Google
+                    </button>
+                </div>
             </div>
-
-            <!-- Menu Central -->
-            <nav class="hidden md:flex space-x-8">
-                <a href="#templates" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Templates</a>
-                <a href="#features" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Recursos</a>
-                <a href="favorites.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Favoritos</a>
-            </nav>
-
-            <!-- Botões Direita -->
-            <div class="flex items-center space-x-4">
-                <!-- Botão Upgrade (SEMPRE VISÍVEL) -->
-                <button onclick="copyCraft.showUpgradeOptions()" 
-                        class="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all items-center">
-                    <i data-feather="star" class="w-4 h-4 mr-2"></i>
-                    Upgrade
-                </button>
-
-                <!-- Botão Login -->
-                <button id="loginButton" 
-                        class="border border-purple-600 text-purple-600 px-6 py-2 rounded-lg font-bold hover:bg-purple-50 transition duration-300 flex items-center">
-                    <i data-feather="log-in" class="w-4 h-4 mr-2"></i>
-                    Login com Google
-                </button>
+        </div>
+    </header>
 
     
     <main class="container mx-auto px-6 py-12">
@@ -223,6 +228,7 @@
 </script>
 </body>
 </html>
+
 
 
 
