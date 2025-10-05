@@ -270,27 +270,29 @@ async loadFavoritesFromSupabase() {
         }
     }
 
-       async checkTrialStatus() {
+          async checkTrialStatus() {
         const trial = await this.getUserTrial();
         
         if (!trial) {
             return { hasTrial: false, message: 'Sem trial ativo' };
         }
         
+        // ⭐⭐ CORREÇÃO: Usar UTC para evitar problemas de fuso horário
         const now = new Date();
+        const nowUTC = new Date(now.toISOString());
         const endsAt = new Date(trial.ends_at);
         
-        // ⭐⭐ CORREÇÃO: Calcular diferença corretamente
-        const timeDiff = endsAt.getTime() - now.getTime();
+        // ⭐⭐ CORREÇÃO: Calcular diferença em UTC
+        const timeDiff = endsAt.getTime() - nowUTC.getTime();
         const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
         
         console.log('📅 Trial check:', { 
-            now: now.toISOString(), 
+            now: nowUTC.toISOString(),
             endsAt: endsAt.toISOString(),
-            daysLeft: daysLeft 
+            timeDiff: timeDiff,
+            daysLeft: daysLeft
         });
         
-        // ⭐⭐ CORREÇÃO: Considerar trial ativo se daysLeft >= 0
         if (daysLeft < 0) {
             return { 
                 hasTrial: false, 
@@ -1104,6 +1106,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
