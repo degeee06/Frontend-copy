@@ -83,37 +83,49 @@ class CopyCraftPro {
             feather.replace();
         }
     }
-    initializeEventListeners() {
-        // Template generation form
-        const generateForm = document.getElementById('generateForm');
-        if (generateForm) {
-            generateForm.addEventListener('submit', (e) => this.generateContent(e));
+   initializeEventListeners() {
+    // Template generation form
+    const generateForm = document.getElementById('generateForm');
+    if (generateForm) {
+        generateForm.addEventListener('submit', (e) => this.generateContent(e));
+    }
+
+    // Tone selection
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tone-option')) {
+            this.selectTone(e);
         }
+    });
 
-        // Tone selection
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('tone-option')) {
-                this.selectTone(e);
-            }
-        });
+    // Copy and favorite buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
+            this.copyToClipboard(e);
+        }
+        
+        if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
+            this.toggleFavorite(e);
+        }
+    });
 
-        // Copy and favorite buttons
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
-                this.copyToClipboard(e);
-            }
-            
-            if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
-                this.toggleFavorite(e);
-            }
-        });
+    // Template selection
+    const templateCards = document.querySelectorAll('.template-card');
+    templateCards.forEach(card => {
+        card.addEventListener('click', (e) => this.selectTemplate(e));
+    }); // ⭐⭐ FECHAR o forEach
 
-        // Template selection
-        const templateCards = document.querySelectorAll('.template-card');
-        templateCards.forEach(card => {
-            card.addEventListener('click', (e) => this.selectTemplate(e));
+    // ⭐⭐ NOVO: Listener para o botão de login
+    const loginButton = document.getElementById('loginButton');
+    if (loginButton) {
+        loginButton.addEventListener('click', () => {
+            if (this.user) {
+                this.logout();
+            } else {
+                this.loginWithGoogle();
+            }
         });
     }
+} // ⭐⭐ FECHAR o método initializeEventListeners
 
 
 selectTemplate(e) {
@@ -766,7 +778,19 @@ Formato desejado:
         return labels[type] || 'Conteúdo';
     }
 }
-
+// No final do script.js, adicione:
+document.addEventListener('DOMContentLoaded', function() {
+    // Listeners para todos os botões de login na página
+    document.querySelectorAll('#loginButton').forEach(button => {
+        button.addEventListener('click', function() {
+            if (window.copyCraft.user) {
+                window.copyCraft.logout();
+            } else {
+                window.copyCraft.loginWithGoogle();
+            }
+        });
+    });
+});
 // Initialize the application
 const copyCraft = new CopyCraftPro();
 
@@ -796,6 +820,7 @@ function showSection(sectionId) {
 window.showSection = showSection;
 
 window.copyCraft = copyCraft;
+
 
 
 
