@@ -270,45 +270,51 @@ async loadFavoritesFromSupabase() {
         }
     }
 
-           async checkTrialStatus() {
-        const trial = await this.getUserTrial();
-        
-        if (!trial) {
-            return { hasTrial: false, message: 'Sem trial ativo' };
-        }
-        
-        // ⭐⭐ SOLUÇÃO DEFINITIVA: Ignorar horas, comparar apenas datas
-        const now = new Date();
-        const endsAt = new Date(trial.ends_at);
-        
-        // Converter para data apenas (ignorar horas)
-        const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const endsAtDate = new Date(endsAt.getFullYear(), endsAt.getMonth(), endsAt.getDate());
-        
-        const timeDiff = endsAtDate.getTime() - nowDate.getTime();
-        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-        
-        console.log('📅 Trial check (date only):', { 
-            nowDate: nowDate.toISOString(),
-            endsAtDate: endsAtDate.toISOString(),
-            daysLeft: daysLeft
-        });
-        
-        // ⭐⭐ CORREÇÃO: Trial vale até o FIM do dia do ends_at
-        if (daysLeft < 0) {
-            return { 
-                hasTrial: false, 
-                message: 'Trial expirado',
-                daysLeft: 0
+             async checkTrialStatus() {
+        try {
+            const trial = await this.getUserTrial();
+            
+            if (!trial) {
+                console.log('❌ Nenhum trial encontrado para o usuário');
+                return { hasTrial: false, message: 'Sem trial ativo' };
+            }
+            
+            console.log('📅 Trial data:', trial);
+            
+            const now = new Date();
+            const endsAt = new Date(trial.ends_at);
+            
+            // ⭐⭐ CORREÇÃO: Comparação simples e direta
+            const isTrialActive = endsAt > now;
+            const timeDiff = endsAt.getTime() - now.getTime();
+            const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+            
+            console.log('📊 Trial status:', {
+                now: now.toISOString(),
+                endsAt: endsAt.toISOString(), 
+                isTrialActive: isTrialActive,
+                daysLeft: daysLeft
+            });
+            
+            if (!isTrialActive) {
+                return { 
+                    hasTrial: false, 
+                    message: 'Trial expirado',
+                    daysLeft: 0
+                };
+            }
+            
+            return {
+                hasTrial: true,
+                message: `${daysLeft} dias restantes`,
+                daysLeft: daysLeft,
+                trialData: trial
             };
+            
+        } catch (error) {
+            console.error('❌ Erro ao verificar status do trial:', error);
+            return { hasTrial: false, message: 'Erro ao verificar trial' };
         }
-        
-        return {
-            hasTrial: true,
-            message: `${daysLeft + 1} dias restantes`, // +1 para incluir o dia atual
-            daysLeft: daysLeft + 1,
-            trialData: trial
-        };
     }
 
 
@@ -1107,6 +1113,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
