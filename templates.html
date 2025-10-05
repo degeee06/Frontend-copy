@@ -7,234 +7,280 @@
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
     <!-- Supabase Auth -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- INCLUA O NOVO CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .modern-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .template-card {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            border: 1px solid #475569;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .template-card:hover {
+            transform: translateY(-5px);
+            border-color: #8b5cf6;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        }
     </style>
 </head>
-<body class="bg-gray-50">
-    <header class="gradient-bg text-white header-shadow">
+<body class="bg-slate-900 text-white">
+    <!-- Header Moderno -->
+    <header class="glass-effect sticky top-0 z-50 border-b border-white/10">
         <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i data-feather="edit-3" class="w-8 h-8"></i>
-                    <span class="text-2xl font-bold">CopyCraft Pro</span>
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <i data-feather="edit-3" class="w-6 h-6 text-purple-300"></i>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">CopyCraft Pro</span>
                 </div>
                 <div class="flex items-center space-x-4">
-            
                     <nav>
-                        <ul class="flex space-x-6">
-                            <li><a href="index.html" class="hover:text-purple-200">Início</a></li>
-                            <li><a href="templates.html" class="hover:text-purple-200 font-medium">Templates</a></li>
-                            <li><a href="favorites.html" class="hover:text-purple-200">Favoritos</a></li>
-                            <li><a href="#" class="hover:text-purple-200">Preços</a></li>
-                           <li>
-    <button id="loginButton" class="bg-white text-purple-800 px-4 py-2 rounded-full font-medium hover:bg-purple-100 transition duration-300">
-        <i data-feather="log-in" class="w-4 h-4 mr-2 inline"></i>
-        Login com Google
-    </button>
-</li>
+                        <ul class="flex space-x-8 items-center">
+                            <li><a href="index.html" class="hover:text-purple-300 transition-colors">Início</a></li>
+                            <li><a href="templates.html" class="text-purple-300 font-medium transition-colors">Templates</a></li>
+                            <li><a href="favorites.html" class="hover:text-purple-300 transition-colors">Favoritos</a></li>
+                            <li><a href="#" class="hover:text-purple-300 transition-colors">Preços</a></li>
+                            <li>
+                                <button id="loginButton" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-full font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
+                                    <i data-feather="log-in" class="w-4 h-4 mr-2 inline"></i>
+                                    Login com Google
+                                </button>
+                            </li>
                         </ul>
                     </nav>
                 </div>
             </div>
         </div>
     </header>
-    <main class="container mx-auto px-6 py-8">
-       
 
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold">Gerador de Conteúdo com IA</h1>
-            <div class="relative w-64">
-                <input type="text" placeholder="Buscar template..." class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600">
-                <i data-feather="search" class="absolute left-3 top-2.5 text-gray-400"></i>
+    <main class="container mx-auto px-6 py-12">
+        <!-- Hero Section Templates -->
+        <div class="text-center mb-16">
+            <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Escolha seu Template
+            </h1>
+            <p class="text-xl text-slate-300 max-w-2xl mx-auto mb-8">
+                Selecione o tipo de conteúdo perfeito para suas necessidades de marketing
+            </p>
+            
+            <!-- Search Bar Moderna -->
+            <div class="max-w-md mx-auto relative">
+                <input type="text" placeholder="Buscar template..." 
+                       class="w-full pl-12 pr-6 py-4 bg-slate-800 border border-slate-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-slate-400">
+                <i data-feather="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5"></i>
             </div>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <!-- Grid de Templates Modernizado -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             <!-- Instagram Template -->
-            <div class="template-card bg-white p-6 rounded-xl shadow-md border border-gray-200 transition duration-300 cursor-pointer"
+            <div class="template-card p-8 cursor-pointer group"
                  data-template="instagram">
-                <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
-                        <i data-feather="instagram" class="text-pink-600"></i>
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mr-5 transform group-hover:scale-110 transition-transform">
+                        <i data-feather="instagram" class="text-white w-7 h-7"></i>
                     </div>
-                    <h2 class="text-xl font-bold">Legendas para Instagram</h2>
+                    <h2 class="text-2xl font-bold text-white">Legendas Instagram</h2>
                 </div>
-                <p class="text-gray-600 mb-6">Gere legendas criativas com hashtags otimizadas para aumentar seu engajamento.</p>
-                <div class="space-y-3 mb-6">
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                <p class="text-slate-300 mb-8 leading-relaxed">Gere legendas criativas com hashtags otimizadas para aumentar seu engajamento.</p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">3 opções de legenda</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Hashtags segmentadas</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Emojis estratégicos</span>
                     </div>
                 </div>
-                <div class="bg-purple-600 text-white text-center py-2 px-4 rounded-lg font-medium">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-4 px-6 rounded-xl font-semibold transform group-hover:scale-105 transition-transform shadow-lg">
                     Selecionar Template
                 </div>
             </div>
 
             <!-- Facebook Ads Template -->
-            <div class="template-card bg-white p-6 rounded-xl shadow-md border border-gray-200 transition duration-300 cursor-pointer"
+            <div class="template-card p-8 cursor-pointer group"
                  data-template="facebook">
-                <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                        <i data-feather="facebook" class="text-blue-600"></i>
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mr-5 transform group-hover:scale-110 transition-transform">
+                        <i data-feather="facebook" class="text-white w-7 h-7"></i>
                     </div>
-                    <h2 class="text-xl font-bold">Anúncios para Facebook</h2>
+                    <h2 class="text-2xl font-bold text-white">Anúncios Facebook</h2>
                 </div>
-                <p class="text-gray-600 mb-6">Copys persuasivas para anúncios que convertem mais visitantes em clientes.</p>
-                <div class="space-y-3 mb-6">
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                <p class="text-slate-300 mb-8 leading-relaxed">Copys persuasivas para anúncios que convertem mais visitantes em clientes.</p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Títulos impactantes</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Texto principal otimizado</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">CTAs eficazes</span>
                     </div>
                 </div>
-                <div class="bg-purple-600 text-white text-center py-2 px-4 rounded-lg font-medium">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-4 px-6 rounded-xl font-semibold transform group-hover:scale-105 transition-transform shadow-lg">
                     Selecionar Template
                 </div>
             </div>
 
             <!-- E-commerce Template -->
-            <div class="template-card bg-white p-6 rounded-xl shadow-md border border-gray-200 transition duration-300 cursor-pointer"
+            <div class="template-card p-8 cursor-pointer group"
                  data-template="ecommerce">
-                <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                        <i data-feather="shopping-cart" class="text-green-600"></i>
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mr-5 transform group-hover:scale-110 transition-transform">
+                        <i data-feather="shopping-cart" class="text-white w-7 h-7"></i>
                     </div>
-                    <h2 class="text-xl font-bold">Descrições de Produto</h2>
+                    <h2 class="text-2xl font-bold text-white">Descrições Produto</h2>
                 </div>
-                <p class="text-gray-600 mb-6">Descrições detalhadas que destacam benefícios e aumentam conversões.</p>
-                <div class="space-y-3 mb-6">
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                <p class="text-slate-300 mb-8 leading-relaxed">Descrições detalhadas que destacam benefícios e aumentam conversões.</p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Destaque de benefícios</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">SEO otimizado</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
-                        <span class="text-sm">Formato para e-commerce</span>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
+                        <span class="text-sm">Formato e-commerce</span>
                     </div>
                 </div>
-                <div class="bg-purple-600 text-white text-center py-2 px-4 rounded-lg font-medium">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-4 px-6 rounded-xl font-semibold transform group-hover:scale-105 transition-transform shadow-lg">
                     Selecionar Template
                 </div>
             </div>
 
             <!-- Email Marketing Template -->
-            <div class="template-card bg-white p-6 rounded-xl shadow-md border border-gray-200 transition duration-300 cursor-pointer"
+            <div class="template-card p-8 cursor-pointer group"
                  data-template="email">
-                <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                        <i data-feather="mail" class="text-red-600"></i>
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mr-5 transform group-hover:scale-110 transition-transform">
+                        <i data-feather="mail" class="text-white w-7 h-7"></i>
                     </div>
-                    <h2 class="text-xl font-bold">Sequência de E-mails</h2>
+                    <h2 class="text-2xl font-bold text-white">Sequência E-mails</h2>
                 </div>
-                <p class="text-gray-600 mb-6">Sequências completas para nutrir leads e aumentar vendas por e-mail.</p>
-                <div class="space-y-3 mb-6">
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                <p class="text-slate-300 mb-8 leading-relaxed">Sequências completas para nutrir leads e aumentar vendas por e-mail.</p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">E-mail completo</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Assuntos atraentes</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">CTAs estratégicos</span>
                     </div>
                 </div>
-                <div class="bg-purple-600 text-white text-center py-2 px-4 rounded-lg font-medium">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-4 px-6 rounded-xl font-semibold transform group-hover:scale-105 transition-transform shadow-lg">
                     Selecionar Template
                 </div>
             </div>
 
             <!-- Blog Posts Template -->
-            <div class="template-card bg-white p-6 rounded-xl shadow-md border border-gray-200 transition duration-300 cursor-pointer"
+            <div class="template-card p-8 cursor-pointer group"
                  data-template="blog">
-                <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
-                        <i data-feather="file-text" class="text-yellow-600"></i>
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl flex items-center justify-center mr-5 transform group-hover:scale-110 transition-transform">
+                        <i data-feather="file-text" class="text-white w-7 h-7"></i>
                     </div>
-                    <h2 class="text-xl font-bold">Títulos para Blog</h2>
+                    <h2 class="text-2xl font-bold text-white">Títulos Blog</h2>
                 </div>
-                <p class="text-gray-600 mb-6">Gere títulos irresistíveis que aumentam o CTR do seu conteúdo.</p>
-                <div class="space-y-3 mb-6">
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                <p class="text-slate-300 mb-8 leading-relaxed">Gere títulos irresistíveis que aumentam o CTR do seu conteúdo.</p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">5 variações de títulos</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Formatos comprovados</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Palavras-chave estratégicas</span>
                     </div>
                 </div>
-                <div class="bg-purple-600 text-white text-center py-2 px-4 rounded-lg font-medium">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-4 px-6 rounded-xl font-semibold transform group-hover:scale-105 transition-transform shadow-lg">
                     Selecionar Template
                 </div>
             </div>
 
             <!-- Google Ads Template -->
-            <div class="template-card bg-white p-6 rounded-xl shadow-md border border-gray-200 transition duration-300 cursor-pointer"
+            <div class="template-card p-8 cursor-pointer group"
                  data-template="google">
-                <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                        <i data-feather="dollar-sign" class="text-blue-600"></i>
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mr-5 transform group-hover:scale-110 transition-transform">
+                        <i data-feather="dollar-sign" class="text-white w-7 h-7"></i>
                     </div>
-                    <h2 class="text-xl font-bold">Anúncios para Google</h2>
+                    <h2 class="text-2xl font-bold text-white">Anúncios Google</h2>
                 </div>
-                <p class="text-gray-600 mb-6">Copys otimizadas para Google Ads com alto potencial de conversão.</p>
-                <div class="space-y-3 mb-6">
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                <p class="text-slate-300 mb-8 leading-relaxed">Copys otimizadas para Google Ads com alto potencial de conversão.</p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Títulos e descrições</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Extensões de anúncio</span>
                     </div>
-                    <div class="flex items-center">
-                        <i data-feather="check-circle" class="text-green-500 mr-2"></i>
+                    <div class="flex items-center text-slate-300">
+                        <i data-feather="check-circle" class="text-green-400 mr-3 w-5 h-5"></i>
                         <span class="text-sm">Palavras-chave estratégicas</span>
                     </div>
                 </div>
-                <div class="bg-purple-600 text-white text-center py-2 px-4 rounded-lg font-medium">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-4 px-6 rounded-xl font-semibold transform group-hover:scale-105 transition-transform shadow-lg">
                     Selecionar Template
                 </div>
             </div>
         </div>
 
-        <!-- Template Form Section -->
-        <div id="templateFormSection" class="bg-white rounded-xl shadow-md p-8 mb-8" style="display: none;">
-            <h2 class="text-2xl font-bold mb-6" id="templateFormTitle">Configurar Template</h2>
+        <!-- Template Form Section Modernizado -->
+        <div id="templateFormSection" class="modern-card p-10 mb-12 border border-slate-600" style="display: none;">
+            <h2 class="text-3xl font-bold mb-8 text-white" id="templateFormTitle">Configurar Template</h2>
             <form id="generateForm">
                 <div id="templateFormContainer">
                     <!-- Template forms will be loaded here dynamically -->
@@ -242,58 +288,69 @@
             </form>
         </div>
 
-        <!-- Generated Content Section -->
+        <!-- Generated Content Section Modernizado -->
         <div id="generatedContent">
             <!-- Generated content will appear here -->
         </div>
     </main>
 
-    <footer class="bg-gray-900 text-gray-400 py-12">
+    <!-- Footer Modernizado -->
+    <footer class="bg-slate-800 text-slate-400 py-16 border-t border-slate-700">
         <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <i data-feather="edit-3" class="w-6 h-6 text-white"></i>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="p-2 bg-purple-600 rounded-lg">
+                            <i data-feather="edit-3" class="w-5 h-5 text-white"></i>
+                        </div>
                         <span class="text-white text-xl font-bold">CopyCraft Pro</span>
                     </div>
-                    <p class="mb-4">A ferramenta definitiva para criação de conteúdo persuasivo com IA.</p>
+                    <p class="mb-6 text-slate-300 leading-relaxed">A ferramenta definitiva para criação de conteúdo persuasivo com IA.</p>
                     <div class="flex space-x-4">
-                        <a href="#"><i data-feather="facebook" class="w-5 h-5 hover:text-white"></i></a>
-                        <a href="#"><i data-feather="instagram" class="w-5 h-5 hover:text-white"></i></a>
-                        <a href="#"><i data-feather="twitter" class="w-5 h-5 hover:text-white"></i></a>
-                        <a href="#"><i data-feather="linkedin" class="w-5 h-5 hover:text-white"></i></a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-purple-600 transition-colors">
+                            <i data-feather="facebook" class="w-4 h-4 hover:text-white"></i>
+                        </a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-pink-600 transition-colors">
+                            <i data-feather="instagram" class="w-4 h-4 hover:text-white"></i>
+                        </a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-blue-500 transition-colors">
+                            <i data-feather="twitter" class="w-4 h-4 hover:text-white"></i>
+                        </a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i data-feather="linkedin" class="w-4 h-4 hover:text-white"></i>
+                        </a>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-4">Produto</h4>
-                    <ul class="space-y-2">
-                        <li><a href="index.html" class="hover:text-white">Funcionalidades</a></li>
-                        <li><a href="#" class="hover:text-white">Preços</a></li>
-                        <li><a href="#" class="hover:text-white">Teste Grátis</a></li>
-                        <li><a href="templates.html" class="hover:text-white">Templates</a></li>
+                    <h4 class="text-white font-bold mb-6 text-lg">Produto</h4>
+                    <ul class="space-y-3">
+                        <li><a href="index.html" class="hover:text-purple-300 transition-colors">Funcionalidades</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Preços</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Teste Grátis</a></li>
+                        <li><a href="templates.html" class="hover:text-purple-300 transition-colors">Templates</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-4">Recursos</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="hover:text-white">Blog</a></li>
-                        <li><a href="#" class="hover:text-white">Tutoriais</a></li>
-                        <li><a href="#" class="hover:text-white">API</a></li>
-                        <li><a href="#" class="hover:text-white">Suporte</a></li>
+                    <h4 class="text-white font-bold mb-6 text-lg">Recursos</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Blog</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Tutoriais</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">API</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Suporte</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-4">Empresa</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="hover:text-white">Sobre Nós</a></li>
-                        <li><a href="#" class="hover:text-white">Carreiras</a></li>
-                        <li><a href="#" class="hover:text-white">Termos</a></li>
-                        <li><a href="#" class="hover:text-white">Privacidade</a></li>
+                    <h4 class="text-white font-bold mb-6 text-lg">Empresa</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Sobre Nós</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Carreiras</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Termos</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Privacidade</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-12 pt-8 text-center">
-                <p>© 2023 CopyCraft Pro. Todos os direitos reservados.</p>
+            <div class="border-t border-slate-700 mt-12 pt-8 text-center">
+                <p class="text-slate-400">© 2024 CopyCraft Pro. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
@@ -303,7 +360,4 @@
         feather.replace();
     </script>
 </body>
-
 </html>
-
-
