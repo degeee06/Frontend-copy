@@ -21,58 +21,6 @@ class CopyCraftPro {
 
    
 
-    showApiKeyModal() {
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        modal.innerHTML = `
-            <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-                <h3 class="text-xl font-bold mb-4">Configurar API Key</h3>
-                <p class="text-gray-600 mb-4">Para usar o CopyCraft Pro, você precisa configurar sua API Key do DeepSeek.</p>
-                <input type="password" id="apiKeyInput" placeholder="Cole sua API Key aqui" 
-                       class="w-full p-3 border border-gray-300 rounded-lg mb-4">
-                <div class="flex space-x-3">
-                    <button onclick="copyCraft.saveApiKey()" 
-                            class="flex-1 bg-purple-600 text-white py-2 rounded-lg font-medium">
-                        Salvar
-                    </button>
-                    <button onclick="copyCraft.hideApiKeyModal()" 
-                            class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium">
-                        Depois
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    saveApiKey() {
-        const input = document.getElementById('apiKeyInput');
-        if (input.value.trim()) {
-            this.apiKey = input.value.trim();
-            localStorage.setItem('deepseekApiKey', this.apiKey);
-            this.updateApiStatus(true);
-            this.hideApiKeyModal();
-        }
-    }
-
-    hideApiKeyModal() {
-        const modal = document.querySelector('.fixed.inset-0');
-        if (modal) modal.remove();
-        this.updateApiStatus(false);
-    }
-
-    updateApiStatus(connected) {
-        const statusElement = document.getElementById('apiStatus');
-        if (statusElement) {
-            if (connected) {
-                statusElement.innerHTML = '<i data-feather="check-circle" class="text-green-500 w-4 h-4"></i> API Conectada';
-            } else {
-                statusElement.innerHTML = '<i data-feather="x-circle" class="text-red-500 w-4 h-4"></i> API Não Configurada';
-            }
-            feather.replace();
-        }
-    }
-
     initializeEventListeners() {
     // Template generation form
     const generateForm = document.getElementById('generateForm');
@@ -785,4 +733,5 @@ function showSection(sectionId) {
 window.showSection = showSection;
 
 window.copyCraft = copyCraft;
+
 
