@@ -743,6 +743,69 @@ updateTemplateForm(templateType) {
         alert('Redirecionando para página de assinatura...');
         // Ex: window.location.href = '/checkout.html';
     }
+
+        // ⭐⭐ MÉTODO PARA MOSTRAR OPÇÕES DE UPGRADE
+    showUpgradeOptions() {
+        const trialStatus = this.user ? await this.checkTrialStatus() : null;
+        const hasActiveTrial = trialStatus?.hasTrial;
+        const daysLeft = trialStatus?.daysLeft || 0;
+
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white p-8 rounded-2xl max-w-md w-full mx-4 text-center">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-feather="star" class="text-purple-600 w-8 h-8"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    ${hasActiveTrial ? 'Faça Upgrade para Pro' : 'Junte-se ao CopyCraft Pro'}
+                </h3>
+                <p class="text-gray-600 mb-4">
+                    ${hasActiveTrial 
+                        ? `Você tem ${daysLeft} dias restantes no trial. Faça upgrade agora para garantir acesso ilimitado!`
+                        : 'Crie uma conta e comece seu trial gratuito de 7 dias!'}
+                </p>
+                
+                ${hasActiveTrial ? `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-left">
+                        <div class="flex items-center">
+                            <i data-feather="clock" class="text-yellow-600 w-4 h-4 mr-2"></i>
+                            <span class="text-yellow-800 font-medium">${daysLeft} dias restantes no trial</span>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="space-y-3">
+                    <button onclick="copyCraft.upgradeToPro()" 
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+                        🚀 ${hasActiveTrial ? 'Fazer Upgrade Agora' : 'Começar Trial Gratuito'}
+                    </button>
+                    
+                    ${hasActiveTrial ? `
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
+                            Continuar no Trial
+                        </button>
+                    ` : `
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
+                            Talvez depois
+                        </button>
+                    `}
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-500">
+                        ✅ Geração ilimitada de conteúdo<br>
+                        ✅ Todos os templates<br>
+                        ✅ Suporte prioritário
+                    </p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        feather.replace();
+    }
     
     
    async callDeepSeekAPI() {
@@ -1152,6 +1215,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
