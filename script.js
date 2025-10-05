@@ -3,258 +3,347 @@ class CopyCraftPro {
         this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
         this.currentTemplate = null;
         
-        // ⭐⭐ NOVO: Configuração do Supabase Auth
-        this.supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co'; // SUA URL DO SUPABASE
-        this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ'; // SUA CHAVE ANON DO SUPABASE
+        // ⭐⭐ Configuração do Supabase Auth
+        this.supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co';
+        this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ';
         this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseAnonKey);
         
         this.user = null;
         this.init();
     }
 
-    async init() { // ⭐⭐ Adicionar async
-    if (typeof feather !== 'undefined') {
-        feather.replace();
+    async init() {
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+        
+        await this.checkAuthState();
+        this.initializeEventListeners();
+        await this.loadFavorites();
     }
-    
-    // ⭐⭐ CORREÇÃO: Aguardar o checkAuthState terminar
-    await this.checkAuthState(); // ⭐⭐ Adicionar await
-    
-    this.initializeEventListeners();
-    await this.loadFavorites(); // ⭐⭐ Adicionar await
-}
 
     async checkAuthState() {
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (user) {
-        this.user = user;
-        this.updateAuthUI();
-        console.log('✅ Usuário logado:', user.email);
-    } else {
-        console.log('❌ Usuário não logado');
-        this.user = null;
-        this.favorites = []; // ⭐⭐ Garantir que está vazio
-    }
-}
-
-   async loginWithGoogle() {
-    const loginButton = document.getElementById('loginButton');
-    const originalText = loginButton.innerHTML;
-    
-    // Loading state
-    loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2"></i>Conectando...';
-    loginButton.disabled = true;
-    feather.replace();
-
-    try {
-        const { data, error } = await this.supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: 'https://frontend-copy-ten.vercel.app'
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (user) {
+            this.user = user;
+            this.updateAuthUI();
+            console.log('✅ Usuário logado:', user.email);
+            
+            // ⭐⭐ INICIAR TRIAL AUTOMATICAMENTE
+            const trial = await this.startTrial();
+            if (trial) {
+                console.log('🎉 Trial ativado para usuário');
             }
-        });
+        } else {
+            console.log('❌ Usuário não logado');
+            this.user = null;
+            this.favorites = [];
+        }
+    }
+
+    async loginWithGoogle() {
+        const loginButton = document.getElementById('loginButton');
+        const originalText = loginButton.innerHTML;
         
-        if (error) throw error;
-        
-    } catch (error) {
-        console.error('Erro no login:', error);
-        alert('Erro ao fazer login com Google');
-        
-        // Restore button
-        loginButton.innerHTML = originalText;
-        loginButton.disabled = false;
+        loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2"></i>Conectando...';
+        loginButton.disabled = true;
         feather.replace();
+
+        try {
+            const { data, error } = await this.supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: 'https://frontend-copy-ten.vercel.app'
+                }
+            });
+            
+            if (error) throw error;
+            
+        } catch (error) {
+            console.error('Erro no login:', error);
+            alert('Erro ao fazer login com Google');
+            
+            loginButton.innerHTML = originalText;
+            loginButton.disabled = false;
+            feather.replace();
+        }
     }
-}
-   async logout() {
-    const { error } = await this.supabase.auth.signOut();
-    if (error) {
-        console.error('Erro no logout:', error);
-    } else {
-        this.user = null;
-        this.favorites = []; // ⭐⭐ LIMPA os favoritos ao deslogar
-        this.updateAuthUI();
-        // Opcional: redirecionar para home
-        window.location.href = 'index.html';
+
+    async logout() {
+        const { error } = await this.supabase.auth.signOut();
+        if (error) {
+            console.error('Erro no logout:', error);
+        } else {
+            this.user = null;
+            this.favorites = [];
+            this.updateAuthUI();
+            window.location.href = 'index.html';
+        }
     }
-}
 
     updateAuthUI() {
-    const loginButton = document.getElementById('loginButton');
-    if (!loginButton) return;
+        const loginButton = document.getElementById('loginButton');
+        if (!loginButton) return;
 
-    if (this.user) {
-        // Usuário logado - mostrar nome e avatar
-        const userName = this.user.user_metadata.full_name || this.user.email;
-        loginButton.innerHTML = `
-            <img src="${this.user.user_metadata.avatar_url || ''}" 
-                 class="w-6 h-6 rounded-full mr-2" 
-                 onerror="this.style.display='none'">
-            <span class="hidden sm:inline">${userName.split(' ')[0]}</span>
-        `;
-        loginButton.title = `Sair (${userName})`;
-    } else {
-        // Usuário não logado
-        loginButton.innerHTML = `
-            <i data-feather="log-in" class="w-4 h-4 mr-2"></i>
-            Login com Google
-        `;
-        feather.replace();
-    }
-}
-   initializeEventListeners() {
-    // Template generation form
-    const generateForm = document.getElementById('generateForm');
-    if (generateForm) {
-        generateForm.addEventListener('submit', (e) => this.generateContent(e));
+        if (this.user) {
+            const userName = this.user.user_metadata.full_name || this.user.email;
+            loginButton.innerHTML = `
+                <img src="${this.user.user_metadata.avatar_url || ''}" 
+                     class="w-6 h-6 rounded-full mr-2" 
+                     onerror="this.style.display='none'">
+                <span class="hidden sm:inline">${userName.split(' ')[0]}</span>
+                <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2" id="trialBadge">
+                    🎯 Trial
+                </span>
+            `;
+            loginButton.title = `Sair (${userName})`;
+            
+            this.updateTrialBadge();
+        } else {
+            loginButton.innerHTML = `
+                <i data-feather="log-in" class="w-4 h-4 mr-2"></i>
+                Login com Google
+            `;
+            feather.replace();
+        }
     }
 
-    // Tone selection
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('tone-option')) {
-            this.selectTone(e);
-        }
-    });
-
-    // Copy and favorite buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
-            this.copyToClipboard(e);
-        }
+    async updateTrialBadge() {
+        const trialBadge = document.getElementById('trialBadge');
+        if (!trialBadge) return;
         
-        if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
-            this.toggleFavorite(e);
+        const trialStatus = await this.checkTrialStatus();
+        if (trialStatus.hasTrial) {
+            trialBadge.textContent = `🎯 ${trialStatus.daysLeft}d`;
+            trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+        } else {
+            trialBadge.textContent = '💔 Expirado';
+            trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
         }
-    });
+    }
 
-    // Template selection
-    const templateCards = document.querySelectorAll('.template-card');
-    templateCards.forEach(card => {
-        card.addEventListener('click', (e) => this.selectTemplate(e));
-    }); // ⭐⭐ FECHAR o forEach
+    initializeEventListeners() {
+        const generateForm = document.getElementById('generateForm');
+        if (generateForm) {
+            generateForm.addEventListener('submit', (e) => this.generateContent(e));
+        }
 
-    // ⭐⭐ NOVO: Listener para o botão de login
-    const loginButton = document.getElementById('loginButton');
-    if (loginButton) {
-        loginButton.addEventListener('click', () => {
-            if (this.user) {
-                this.logout();
-            } else {
-                this.loginWithGoogle();
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tone-option')) {
+                this.selectTone(e);
             }
         });
-    }
-} // ⭐⭐ FECHAR o método initializeEventListeners
 
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
+                this.copyToClipboard(e);
+            }
+            
+            if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
+                this.toggleFavorite(e);
+            }
+        });
+
+        const templateCards = document.querySelectorAll('.template-card');
+        templateCards.forEach(card => {
+            card.addEventListener('click', (e) => this.selectTemplate(e));
+        });
+
+        const loginButton = document.getElementById('loginButton');
+        if (loginButton) {
+            loginButton.addEventListener('click', () => {
+                if (this.user) {
+                    this.logout();
+                } else {
+                    this.loginWithGoogle();
+                }
+            });
+        }
+    }
 
     // ⭐⭐ MÉTODOS SUPABASE PARA FAVORITOS
-async saveFavoritesToSupabase() {
-    if (!this.user) return;
-    
-    try {
-        const { data, error } = await this.supabase
-            .from('user_favorites')
-            .upsert({
-                user_id: this.user.id,
-                favorites: this.favorites,
-                updated_at: new Date().toISOString()
-            }, {
-                onConflict: 'user_id'
-            });
-            
-        if (error) throw error;
-        console.log('✅ Favoritos salvos no Supabase');
-    } catch (error) {
-        console.error('❌ Erro ao salvar favoritos:', error);
-    }
-}
-
-async loadFavoritesFromSupabase() {
-    // ⭐⭐ CORREÇÃO: Sempre limpa os favoritos se não está logado
-    if (!this.user) {
-        this.favorites = []; // ⭐⭐ LIMPA os favoritos
-        return;
-    }
-    
-    try {
-        const { data, error } = await this.supabase
-            .from('user_favorites')
-            .select('favorites')
-            .eq('user_id', this.user.id)
-            .single();
-            
-        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no data
+    async saveFavoritesToSupabase() {
+        if (!this.user) return;
         
-        if (data && data.favorites) {
-            this.favorites = data.favorites;
-            console.log('✅ Favoritos carregados do Supabase');
-        } else {
-            this.favorites = []; // ⭐⭐ Se não tem dados, array vazio
+        try {
+            const { data, error } = await this.supabase
+                .from('user_favorites')
+                .upsert({
+                    user_id: this.user.id,
+                    favorites: this.favorites,
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'user_id'
+                });
+                
+            if (error) throw error;
+            console.log('✅ Favoritos salvos no Supabase');
+        } catch (error) {
+            console.error('❌ Erro ao salvar favoritos:', error);
         }
-    } catch (error) {
-        console.error('❌ Erro ao carregar favoritos:', error);
-        this.favorites = []; // ⭐⭐ Em caso de erro, array vazio
     }
-}
 
-selectTemplate(e) {
-    const card = e.currentTarget;
-    const templateType = card.dataset.template;
-    
-    document.querySelectorAll('.template-card').forEach(c => {
-        c.classList.remove('border-purple-500', 'border-2', 'bg-purple-50');
-    });
-    
-    card.classList.add('border-purple-500', 'border-2', 'bg-purple-50');
-    this.currentTemplate = templateType;
-    this.updateTemplateForm(templateType);
-    
-    // ⭐⭐ CORREÇÃO: MOSTRAR O FORMULÁRIO ⭐⭐
-    const formSection = document.getElementById('templateFormSection');
-    const formTitle = document.getElementById('templateFormTitle');
-    
-    if (formSection) {
-        formSection.style.display = 'block';
+    async loadFavoritesFromSupabase() {
+        if (!this.user) {
+            this.favorites = [];
+            return;
+        }
         
-        // Atualizar o título do formulário
-        if (formTitle) {
-            const templateNames = {
-                instagram: 'Legendas para Instagram',
-                facebook: 'Anúncios para Facebook', 
-                ecommerce: 'Descrições de Produto',
-                email: 'E-mails de Marketing',
-                google: 'Anúncios para Google',
-                blog: 'Títulos para Blog'
+        try {
+            const { data, error } = await this.supabase
+                .from('user_favorites')
+                .select('favorites')
+                .eq('user_id', this.user.id)
+                .single();
+                
+            if (error && error.code !== 'PGRST116') throw error;
+            
+            if (data && data.favorites) {
+                this.favorites = data.favorites;
+                console.log('✅ Favoritos carregados do Supabase');
+            } else {
+                this.favorites = [];
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar favoritos:', error);
+            this.favorites = [];
+        }
+    }
+
+    // ⭐⭐ MÉTODOS PARA TRIAL GRATUITO
+    async startTrial() {
+        if (!this.user) return;
+        
+        try {
+            const { data, error } = await this.supabase
+                .from('user_trials')
+                .insert([{ user_id: this.user.id }])
+                .select()
+                .single();
+                
+            if (error) throw error;
+            console.log('✅ Trial iniciado:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Erro ao iniciar trial:', error);
+            if (error.code === '23505') {
+                return await this.getUserTrial();
+            }
+            throw error;
+        }
+    }
+
+    async getUserTrial() {
+        if (!this.user) return null;
+        
+        try {
+            const { data, error } = await this.supabase
+                .from('user_trials')
+                .select('*')
+                .eq('user_id', this.user.id)
+                .single();
+                
+            if (error && error.code !== 'PGRST116') throw error;
+            return data;
+        } catch (error) {
+            console.error('❌ Erro ao buscar trial:', error);
+            return null;
+        }
+    }
+
+    async checkTrialStatus() {
+        const trial = await this.getUserTrial();
+        
+        if (!trial) {
+            return { hasTrial: false, message: 'Sem trial ativo' };
+        }
+        
+        const now = new Date();
+        const endsAt = new Date(trial.ends_at);
+        const daysLeft = Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24));
+        
+        if (daysLeft <= 0) {
+            return { 
+                hasTrial: false, 
+                message: 'Trial expirado',
+                daysLeft: 0
             };
-            formTitle.textContent = `Configurar ${templateNames[templateType]}`;
         }
         
-        // Scroll suave para o formulário
-        setTimeout(() => {
-            formSection.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
-        }, 100);
+        return {
+            hasTrial: true,
+            message: `${daysLeft} dias restantes`,
+            daysLeft: daysLeft,
+            trialData: trial
+        };
     }
-}
 
-updateTemplateForm(templateType) {
-    const formContainer = document.getElementById('templateFormContainer');
-    if (!formContainer) return;
+    async generateContent(e) {
+        e.preventDefault();
+        
+        // ⭐⭐ VERIFICAR SE TEM TRIAL ATIVO
+        const trialStatus = await this.checkTrialStatus();
+        if (!trialStatus.hasTrial) {
+            this.showTrialExpiredModal(trialStatus);
+            return;
+        }
 
-    const forms = {
-        instagram: this.getInstagramForm(),
-        facebook: this.getFacebookForm(),
-        ecommerce: this.getEcommerceForm(),
-        email: this.getEmailForm(),
-        google: this.getGoogleForm(),
-        blog: this.getBlogForm()
-    };
+        if (!this.currentTemplate) {
+            alert('Por favor, selecione um template primeiro.');
+            return;
+        }
 
-    formContainer.innerHTML = forms[templateType] || forms.instagram;
-    feather.replace();
-}
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin inline w-4 h-4 mr-2"></i>Gerando com IA...';
+        submitBtn.disabled = true;
+        feather.replace();
+
+        try {
+            const content = await this.callDeepSeekAPI();
+            this.displayGeneratedContent(content);
+        } catch (error) {
+            console.error('Error generating content:', error);
+            alert('Erro ao gerar conteúdo. Verifique sua API Key e tente novamente.');
+            const sampleContent = this.generateSampleContent();
+            this.displayGeneratedContent(sampleContent);
+        }
+
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        feather.replace();
+    }
+
+    showTrialExpiredModal(trialStatus) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white p-8 rounded-2xl max-w-md w-full mx-4 text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-feather="clock" class="text-yellow-600 w-8 h-8"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Trial Expirado</h3>
+                <p class="text-gray-600 mb-6">
+                    Seu período de teste de 7 dias acabou. 
+                    Assine agora para continuar gerando conteúdos incríveis!
+                </p>
+                <div class="space-y-3">
+                    <button onclick="copyCraft.upgradeToPro()" 
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+                        🚀 Assinar Agora - R$ 29,90/mês
+                    </button>
+                    <button onclick="this.closest('.fixed').remove()" 
+                            class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
+                        Talvez depois
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        feather.replace();
+    }
 
     getInstagramForm() {
         return `
@@ -490,83 +579,45 @@ updateTemplateForm(templateType) {
         const toneOption = e.target;
         const container = toneOption.closest('#toneSelector');
         
-        // Remove active class from all options in the same container
         container.querySelectorAll('.tone-option').forEach(opt => {
             opt.classList.remove('bg-purple-100', 'text-purple-800');
             opt.classList.add('bg-gray-100', 'text-gray-800');
         });
         
-        // Add active class to selected option
         toneOption.classList.remove('bg-gray-100', 'text-gray-800');
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-    async generateContent(e) {
-        e.preventDefault();
+    async callDeepSeekAPI() {
+        const contentInput = document.getElementById('contentInput');
+        const styleSelect = document.getElementById('styleSelect');
+        const toneSelector = document.getElementById('toneSelector');
         
+        const userInput = contentInput ? contentInput.value : '';
+        const style = styleSelect ? styleSelect.value : 'engajamento';
+        const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
+        const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
 
-        if (!this.currentTemplate) {
-            alert('Por favor, selecione um template primeiro.');
-            return;
+        const prompt = this.buildPrompt(userInput, style, tone);
+
+        const response = await fetch('https://backend-copy-1e16.onrender.com/api/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                prompt: prompt,
+                template: this.currentTemplate
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Backend Error: ${response.status}`);
         }
 
-        const form = e.target;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
-        // Show loading state
-        submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin inline w-4 h-4 mr-2"></i>Gerando com IA...';
-        submitBtn.disabled = true;
-        feather.replace();
-
-        try {
-            const content = await this.callDeepSeekAPI();
-            this.displayGeneratedContent(content);
-        } catch (error) {
-            console.error('Error generating content:', error);
-            alert('Erro ao gerar conteúdo. Verifique sua API Key e tente novamente.');
-            // Fallback to sample content
-            const sampleContent = this.generateSampleContent();
-            this.displayGeneratedContent(sampleContent);
-        }
-
-        // Restore button
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-        feather.replace();
+        const data = await response.json();
+        return data.content;
     }
-
-   async callDeepSeekAPI() {
-    const contentInput = document.getElementById('contentInput');
-    const styleSelect = document.getElementById('styleSelect');
-    const toneSelector = document.getElementById('toneSelector');
-    
-    const userInput = contentInput ? contentInput.value : '';
-    const style = styleSelect ? styleSelect.value : 'engajamento';
-    const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
-    const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
-
-    const prompt = this.buildPrompt(userInput, style, tone);
-
-    // ⭐⭐ MUDANÇA AQUI: Chama SEU backend em vez da API diretamente ⭐⭐
-    const response = await fetch('https://backend-copy-1e16.onrender.com/api/generate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            prompt: prompt,
-            template: this.currentTemplate
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`Backend Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.content;
-}
 
     buildPrompt(userInput, style, tone) {
         const templatePrompts = {
