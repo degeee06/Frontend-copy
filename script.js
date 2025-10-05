@@ -466,48 +466,37 @@ updateTemplateForm(templateType) {
         feather.replace();
     }
 
-    async callDeepSeekAPI() {
-        const contentInput = document.getElementById('contentInput');
-        const styleSelect = document.getElementById('styleSelect');
-        const toneSelector = document.getElementById('toneSelector');
-        
-        const userInput = contentInput ? contentInput.value : '';
-        const style = styleSelect ? styleSelect.value : 'engajamento';
-        const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
-        const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
+   async callDeepSeekAPI() {
+    const contentInput = document.getElementById('contentInput');
+    const styleSelect = document.getElementById('styleSelect');
+    const toneSelector = document.getElementById('toneSelector');
+    
+    const userInput = contentInput ? contentInput.value : '';
+    const style = styleSelect ? styleSelect.value : 'engajamento';
+    const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
+    const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
 
-        const prompt = this.buildPrompt(userInput, style, tone);
+    const prompt = this.buildPrompt(userInput, style, tone);
 
-        const response = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.apiKey}`
-            },
-            body: JSON.stringify({
-                model: "deepseek-chat",
-                messages: [
-                    {
-                        role: "system",
-                        content: "Você é um especialista em copywriting e marketing digital. Gere conteúdo persuasivo e otimizado em português do Brasil."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                max_tokens: 1000,
-                temperature: 0.7
-            })
-        });
+    // ⭐⭐ MUDANÇA AQUI: Chama SEU backend em vez da API diretamente ⭐⭐
+    const response = await fetch('https://backend-copy-1e16.onrender.com', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: prompt,
+            template: this.currentTemplate
+        })
+    });
 
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.choices[0].message.content;
+    if (!response.ok) {
+        throw new Error(`Backend Error: ${response.status}`);
     }
+
+    const data = await response.json();
+    return data.content;
+}
 
     buildPrompt(userInput, style, tone) {
         const templatePrompts = {
@@ -816,4 +805,5 @@ function showSection(sectionId) {
 
 // Make functions globally available
 window.showSection = showSection;
+
 window.copyCraft = copyCraft;
