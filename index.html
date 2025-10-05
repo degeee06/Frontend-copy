@@ -65,12 +65,12 @@
 
             <!-- Botões Direita -->
             <div class="flex items-center space-x-4">
-                <!-- Botão Upgrade (SEMPRE VISÍVEL) -->
-                <button onclick="copyCraft.showUpgradeOptions()" 
-                        class="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all items-center">
-                    <i data-feather="star" class="w-4 h-4 mr-2"></i>
-                    Upgrade
-                </button>
+               <!-- Botão Upgrade - VAI DIRETO PARA CHECKOUT -->
+<button onclick="window.location.href = 'checkout.html'" 
+        class="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all items-center">
+    <i data-feather="star" class="w-4 h-4 mr-2"></i>
+    Fazer Upgrade
+</button>
 
                 <!-- Botão Login -->
                 <button id="loginButton" 
@@ -82,8 +82,9 @@
         </div>
     </div>
 </header>
-    <!-- Botão Upgrade Mobile (ícone apenas) -->
-<button onclick="copyCraft.showUpgradeOptions()" 
+    
+  <!-- Mobile -->
+<button onclick="window.location.href = 'checkout.html'" 
         class="sm:hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white p-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
     <i data-feather="star" class="w-4 h-4"></i>
 </button>
@@ -287,5 +288,6 @@
     </script>
 </body>
 </html>
+
 
 
