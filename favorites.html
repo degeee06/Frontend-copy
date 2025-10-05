@@ -8,123 +8,190 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <!-- Supabase Auth -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .modern-card {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        .modern-card:hover {
+            transform: translateY(-5px);
+            border-color: #8b5cf6;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        }
+        .copy-card {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
         .copy-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <header class="gradient-bg text-white header-shadow">
+<body class="bg-slate-900 text-white">
+    <!-- Header Moderno -->
+    <header class="glass-effect sticky top-0 z-50 border-b border-white/10">
         <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i data-feather="edit-3" class="w-8 h-8"></i>
-                    <span class="text-2xl font-bold">CopyCraft Pro</span>
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <i data-feather="edit-3" class="w-6 h-6 text-purple-300"></i>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">CopyCraft Pro</span>
                 </div>
                 <nav>
-                    <ul class="flex space-x-6">
-                        <li><a href="index.html" class="hover:text-purple-200">Início</a></li>
-                        <li><a href="templates.html" class="hover:text-purple-200">Templates</a></li>
-                        <li><a href="favorites.html" class="hover:text-purple-200 font-medium">Favoritos</a></li>
-                        <li><a href="#" class="hover:text-purple-200">Preços</a></li>
-                        <li><a href="#" class="bg-white text-purple-800 px-4 py-2 rounded-full font-medium hover:bg-purple-100">Login</a></li>
+                    <ul class="flex space-x-8 items-center">
+                        <li><a href="index.html" class="hover:text-purple-300 transition-colors">Início</a></li>
+                        <li><a href="templates.html" class="hover:text-purple-300 transition-colors">Templates</a></li>
+                        <li><a href="favorites.html" class="text-purple-300 font-medium transition-colors">Favoritos</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Preços</a></li>
+                        <li>
+                            <button id="loginButton" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-full font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
+                                <i data-feather="log-in" class="w-4 h-4 mr-2 inline"></i>
+                                Login com Google
+                            </button>
+                        </li>
                     </ul>
                 </nav>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-6 py-8">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-white">Seus Conteúdos Favoritos</h1>
-            <div class="flex space-x-4">
+    <main class="container mx-auto px-6 py-12">
+        <!-- Header Section -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12">
+            <div class="mb-6 lg:mb-0">
+                <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Seus Conteúdos Favoritos
+                </h1>
+                <p class="text-slate-300 text-lg">Todos os seus conteúdos salvos em um só lugar</p>
+            </div>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <!-- Filter Modernizado -->
                 <div class="relative">
-                    <select id="filterType" class="appearance-none bg-white border border-gray-300 rounded-full pl-4 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600">
-                        <option value="all">Todos os Tipos</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="facebook">Facebook Ads</option>
-                        <option value="google">Google Ads</option>
-                        <option value="ecommerce">E-commerce</option>
-                        <option value="email">E-mails</option>
-                        <option value="blog">Blog</option>
+                    <select id="filterType" class="appearance-none bg-slate-800 border border-slate-600 rounded-2xl pl-5 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white cursor-pointer">
+                        <option value="all" class="bg-slate-800">Todos os Tipos</option>
+                        <option value="instagram" class="bg-slate-800">Instagram</option>
+                        <option value="facebook" class="bg-slate-800">Facebook Ads</option>
+                        <option value="google" class="bg-slate-800">Google Ads</option>
+                        <option value="ecommerce" class="bg-slate-800">E-commerce</option>
+                        <option value="email" class="bg-slate-800">E-mails</option>
+                        <option value="blog" class="bg-slate-800">Blog</option>
                     </select>
-                    <i data-feather="chevron-down" class="absolute right-3 top-2.5 text-gray-400 pointer-events-none"></i>
+                    <i data-feather="chevron-down" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                 </div>
+                
+                <!-- Sort Modernizado -->
                 <div class="relative">
-                    <select id="sortBy" class="appearance-none bg-white border border-gray-300 rounded-full pl-4 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600">
-                        <option value="newest">Mais Recentes</option>
-                        <option value="oldest">Mais Antigos</option>
-                        <option value="name">Nome A-Z</option>
+                    <select id="sortBy" class="appearance-none bg-slate-800 border border-slate-600 rounded-2xl pl-5 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white cursor-pointer">
+                        <option value="newest" class="bg-slate-800">Mais Recentes</option>
+                        <option value="oldest" class="bg-slate-800">Mais Antigos</option>
+                        <option value="name" class="bg-slate-800">Nome A-Z</option>
                     </select>
-                    <i data-feather="chevron-down" class="absolute right-3 top-2.5 text-gray-400 pointer-events-none"></i>
+                    <i data-feather="chevron-down" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                 </div>
             </div>
         </div>
 
+        <!-- Favorites Grid Modernizado -->
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="favoritesGrid">
             <!-- Favorites will be loaded dynamically by script.js -->
         </div>
 
+        <!-- Empty State Modernizado -->
+        <div class="mt-16 text-center py-16">
+            <div class="max-w-md mx-auto">
+                <div class="w-24 h-24 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i data-feather="heart" class="w-12 h-12 text-slate-500"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-300 mb-4">Nenhum favorito ainda</h3>
+                <p class="text-slate-400 mb-8">Gere alguns conteúdos e adicione-os aos favoritos para vê-los aqui!</p>
+                <a href="templates.html" class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-2xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105">
+                    Criar Primeiro Conteúdo
+                </a>
+            </div>
+        </div>
+
+        <!-- Refresh Button Modernizado -->
         <div class="mt-12 flex justify-center">
-            <button class="border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:bg-purple-50 transition duration-300" onclick="copyCraft.loadFavorites()">
+            <button class="border border-purple-500 text-purple-300 px-8 py-3 rounded-2xl hover:bg-purple-500 hover:text-white transition-all duration-300 transform hover:scale-105" onclick="copyCraft.loadFavorites()">
+                <i data-feather="refresh-cw" class="w-4 h-4 mr-2 inline"></i>
                 Atualizar Lista
             </button>
         </div>
     </main>
 
-    <footer class="bg-gray-900 text-gray-400 py-12">
+    <!-- Footer Modernizado -->
+    <footer class="bg-slate-800 text-slate-400 py-16 border-t border-slate-700">
         <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <i data-feather="edit-3" class="w-6 h-6 text-white"></i>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="p-2 bg-purple-600 rounded-lg">
+                            <i data-feather="edit-3" class="w-5 h-5 text-white"></i>
+                        </div>
                         <span class="text-white text-xl font-bold">CopyCraft Pro</span>
                     </div>
-                    <p class="mb-4">A ferramenta definitiva para criação de conteúdo persuasivo com IA.</p>
+                    <p class="mb-6 text-slate-300 leading-relaxed">A ferramenta definitiva para criação de conteúdo persuasivo com IA.</p>
                     <div class="flex space-x-4">
-                        <a href="#"><i data-feather="facebook" class="w-5 h-5 hover:text-white"></i></a>
-                        <a href="#"><i data-feather="instagram" class="w-5 h-5 hover:text-white"></i></a>
-                        <a href="#"><i data-feather="twitter" class="w-5 h-5 hover:text-white"></i></a>
-                        <a href="#"><i data-feather="linkedin" class="w-5 h-5 hover:text-white"></i></a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-purple-600 transition-colors">
+                            <i data-feather="facebook" class="w-4 h-4 hover:text-white"></i>
+                        </a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-pink-600 transition-colors">
+                            <i data-feather="instagram" class="w-4 h-4 hover:text-white"></i>
+                        </a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-blue-500 transition-colors">
+                            <i data-feather="twitter" class="w-4 h-4 hover:text-white"></i>
+                        </a>
+                        <a href="#" class="p-2 bg-slate-700 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i data-feather="linkedin" class="w-4 h-4 hover:text-white"></i>
+                        </a>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-4">Produto</h4>
-                    <ul class="space-y-2">
-                        <li><a href="index.html" class="hover:text-white">Funcionalidades</a></li>
-                        <li><a href="#" class="hover:text-white">Preços</a></li>
-                        <li><a href="#" class="hover:text-white">Teste Grátis</a></li>
-                        <li><a href="templates.html" class="hover:text-white">Templates</a></li>
+                    <h4 class="text-white font-bold mb-6 text-lg">Produto</h4>
+                    <ul class="space-y-3">
+                        <li><a href="index.html" class="hover:text-purple-300 transition-colors">Funcionalidades</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Preços</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Teste Grátis</a></li>
+                        <li><a href="templates.html" class="hover:text-purple-300 transition-colors">Templates</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-4">Recursos</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="hover:text-white">Blog</a></li>
-                        <li><a href="#" class="hover:text-white">Tutoriais</a></li>
-                        <li><a href="#" class="hover:text-white">API</a></li>
-                        <li><a href="#" class="hover:text-white">Suporte</a></li>
+                    <h4 class="text-white font-bold mb-6 text-lg">Recursos</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Blog</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Tutoriais</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">API</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Suporte</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-4">Empresa</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="hover:text-white">Sobre Nós</a></li>
-                        <li><a href="#" class="hover:text-white">Carreiras</a></li>
-                        <li><a href="#" class="hover:text-white">Termos</a></li>
-                        <li><a href="#" class="hover:text-white">Privacidade</a></li>
+                    <h4 class="text-white font-bold mb-6 text-lg">Empresa</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Sobre Nós</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Carreiras</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Termos</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Privacidade</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-12 pt-8 text-center">
-                <p>© 2023 CopyCraft Pro. Todos os direitos reservados.</p>
+            <div class="border-t border-slate-700 mt-12 pt-8 text-center">
+                <p class="text-slate-400">© 2024 CopyCraft Pro. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
@@ -143,5 +210,4 @@
         });
     </script>
 </body>
-
 </html>
