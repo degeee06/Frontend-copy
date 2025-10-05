@@ -695,12 +695,12 @@ Formato desejado:
         });
     }
 
-   toggleFavorite(e) {
+   async toggleFavorite(e) { // ⭐⭐ Adicionar async
     const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
     const content = button.dataset.content;
     const type = button.dataset.type;
     
-    // ⭐⭐ CORREÇÃO: Verificar se usuário está logado
+    // Verificar se usuário está logado
     if (!this.user) {
         alert('⚠️ Faça login para salvar favoritos!');
         this.loginWithGoogle();
@@ -713,13 +713,17 @@ Formato desejado:
         content: content,
         date: new Date().toLocaleDateString('pt-BR'),
         title: this.generateFavoriteTitle(content),
-        user_id: this.user.id // Vincula ao usuário
+        user_id: this.user.id
     };
     
     this.favorites.push(favorite);
-    this.saveFavorites(); // Agora salva no Supabase
-    // ⭐⭐ CORREÇÃO: Atualizar a visualização IMEDIATAMENTE
+    
+    // ⭐⭐ CORREÇÃO: Aguardar o saveFavorites terminar
+    await this.saveFavorites(); // ⭐⭐ Adicionar await
+    
+    // ⭐⭐ CORREÇÃO: Atualizar a visualização APÓS salvar
     this.loadFavorites();
+    
     // Visual feedback
     const originalText = button.innerHTML;
     button.innerHTML = '<i data-feather="heart" class="w-4 h-4 mr-2 fill-current"></i>Salvo!';
@@ -892,6 +896,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
