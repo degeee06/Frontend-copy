@@ -12,26 +12,30 @@ class CopyCraftPro {
         this.init();
     }
 
-    init() {
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
-        
-        // ⭐⭐ NOVO: Verificar se usuário já está logado
-        this.checkAuthState();
-        
-        this.initializeEventListeners();
-        this.loadFavorites();
+    async init() { // ⭐⭐ Adicionar async
+    if (typeof feather !== 'undefined') {
+        feather.replace();
     }
+    
+    // ⭐⭐ CORREÇÃO: Aguardar o checkAuthState terminar
+    await this.checkAuthState(); // ⭐⭐ Adicionar await
+    
+    this.initializeEventListeners();
+    await this.loadFavorites(); // ⭐⭐ Adicionar await
+}
 
-    // ⭐⭐ NOVO: Métodos de Autenticação
     async checkAuthState() {
-        const { data: { user } } = await this.supabase.auth.getUser();
-        if (user) {
-            this.user = user;
-            this.updateAuthUI();
-        }
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (user) {
+        this.user = user;
+        this.updateAuthUI();
+        console.log('✅ Usuário logado:', user.email);
+    } else {
+        console.log('❌ Usuário não logado');
+        this.user = null;
+        this.favorites = []; // ⭐⭐ Garantir que está vazio
     }
+}
 
    async loginWithGoogle() {
     const loginButton = document.getElementById('loginButton');
@@ -750,62 +754,66 @@ Formato desejado:
     }
 }
 
-   async loadFavorites() {
+  async loadFavorites() {
+    console.log('🔄 Carregando favoritos...', 'Usuário:', this.user ? this.user.email : 'Não logado');
+    
     await this.loadFavoritesFromSupabase();
     
     const favoritesGrid = document.getElementById('favoritesGrid');
     if (!favoritesGrid) return;
 
-        if (this.favorites.length === 0) {
-            favoritesGrid.innerHTML = `
-                <div class="col-span-3 text-center py-12">
-                    <i data-feather="heart" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-                    <h3 class="text-xl font-bold text-gray-500 mb-2">Nenhum favorito ainda</h3>
-                    <p class="text-gray-400">Gere alguns conteúdos e adicione-os aos favoritos!</p>
-                </div>
-            `;
-            feather.replace();
-            return;
-        }
+    console.log('📊 Favoritos carregados:', this.favorites.length);
 
-        favoritesGrid.innerHTML = this.favorites.map(fav => `
-            <div class="copy-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition duration-300">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 ${this.getTypeColor(fav.type)} rounded-full flex items-center justify-center mr-3">
-                            <i data-feather="${this.getTypeIcon(fav.type)}" class="${this.getTypeIconColor(fav.type)} w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">${this.getTypeLabel(fav.type)}</h3>
-                            <p class="text-sm text-gray-500">${fav.date}</p>
-                        </div>
-                    </div>
-                    <button class="text-gray-400 hover:text-red-500 delete-favorite" data-id="${fav.id}">
-                        <i data-feather="trash-2" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg mb-4 max-h-32 overflow-y-auto">
-                    <p class="text-gray-700 whitespace-pre-line">${fav.content}</p>
-                </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${fav.type}</span>
-                    <button class="btn-copy text-purple-600 hover:text-purple-800 font-medium" data-content="${fav.content.replace(/"/g, '&quot;')}">
-                        Copiar
-                    </button>
-                </div>
+    if (this.favorites.length === 0) {
+        favoritesGrid.innerHTML = `
+            <div class="col-span-3 text-center py-12">
+                <i data-feather="heart" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-500 mb-2">Nenhum favorito ainda</h3>
+                <p class="text-gray-400">Gere alguns conteúdos e adicione-os aos favoritos!</p>
             </div>
-        `).join('');
-
+        `;
         feather.replace();
-
-        // Add event listeners for delete buttons
-        document.querySelectorAll('.delete-favorite').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = parseInt(e.currentTarget.dataset.id);
-                this.deleteFavorite(id);
-            });
-        });
+        return;
     }
+
+    favoritesGrid.innerHTML = this.favorites.map(fav => `
+        <div class="copy-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition duration-300">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 ${this.getTypeColor(fav.type)} rounded-full flex items-center justify-center mr-3">
+                        <i data-feather="${this.getTypeIcon(fav.type)}" class="${this.getTypeIconColor(fav.type)} w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">${this.getTypeLabel(fav.type)}</h3>
+                        <p class="text-sm text-gray-500">${fav.date}</p>
+                    </div>
+                </div>
+                <button class="text-gray-400 hover:text-red-500 delete-favorite" data-id="${fav.id}">
+                    <i data-feather="trash-2" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 max-h-32 overflow-y-auto">
+                <p class="text-gray-700 whitespace-pre-line">${fav.content}</p>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${fav.type}</span>
+                <button class="btn-copy text-purple-600 hover:text-purple-800 font-medium" data-content="${fav.content.replace(/"/g, '&quot;')}">
+                    Copiar
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    feather.replace();
+
+    // Add event listeners for delete buttons
+    document.querySelectorAll('.delete-favorite').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = parseInt(e.currentTarget.dataset.id);
+            this.deleteFavorite(id);
+        });
+    });
+}
 
     deleteFavorite(id) {
         this.favorites = this.favorites.filter(fav => fav.id !== id);
@@ -894,6 +902,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
