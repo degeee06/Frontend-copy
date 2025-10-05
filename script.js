@@ -270,7 +270,7 @@ async loadFavoritesFromSupabase() {
         }
     }
 
-    async checkTrialStatus() {
+       async checkTrialStatus() {
         const trial = await this.getUserTrial();
         
         if (!trial) {
@@ -279,9 +279,19 @@ async loadFavoritesFromSupabase() {
         
         const now = new Date();
         const endsAt = new Date(trial.ends_at);
-        const daysLeft = Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24));
         
-        if (daysLeft <= 0) {
+        // ⭐⭐ CORREÇÃO: Calcular diferença corretamente
+        const timeDiff = endsAt.getTime() - now.getTime();
+        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        
+        console.log('📅 Trial check:', { 
+            now: now.toISOString(), 
+            endsAt: endsAt.toISOString(),
+            daysLeft: daysLeft 
+        });
+        
+        // ⭐⭐ CORREÇÃO: Considerar trial ativo se daysLeft >= 0
+        if (daysLeft < 0) {
             return { 
                 hasTrial: false, 
                 message: 'Trial expirado',
@@ -1094,6 +1104,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
