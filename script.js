@@ -754,7 +754,26 @@ Formato desejado:
     }
 }
 
-  async loadFavorites() {
+    
+// ⭐⭐ MÉTODO NOVO: Ordenar favoritos
+sortFavorites(favorites, sortBy) {
+    const sortedFavorites = [...favorites]; // Cria uma cópia
+    
+    switch (sortBy) {
+        case 'newest':
+            return sortedFavorites.sort((a, b) => b.id - a.id); // Mais recentes primeiro
+        case 'oldest':
+            return sortedFavorites.sort((a, b) => a.id - b.id); // Mais antigos primeiro
+        case 'name':
+            return sortedFavorites.sort((a, b) => a.title.localeCompare(b.title)); // Ordem alfabética
+        default:
+            return sortedFavorites;
+    }
+}
+
+    
+    
+ async loadFavorites() {
     console.log('🔄 Carregando favoritos...', 'Usuário:', this.user ? this.user.email : 'Não logado');
     
     await this.loadFavoritesFromSupabase();
@@ -762,21 +781,44 @@ Formato desejado:
     const favoritesGrid = document.getElementById('favoritesGrid');
     if (!favoritesGrid) return;
 
-    console.log('📊 Favoritos carregados:', this.favorites.length);
+    // ⭐⭐ CORREÇÃO: Obter filtro e ordenação selecionados
+    const filterType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
+    const sortBy = document.getElementById('sortBy') ? document.getElementById('sortBy').value : 'newest';
+    
+    console.log('📊 Filtro:', filterType, 'Ordenação:', sortBy);
 
-    if (this.favorites.length === 0) {
+    // ⭐⭐ CORREÇÃO: Filtrar favoritos pelo tipo selecionado
+    let filteredFavorites = this.favorites;
+    
+    if (filterType !== 'all') {
+        filteredFavorites = this.favorites.filter(fav => fav.type === filterType);
+    }
+    
+    console.log('📊 Favoritos após filtro:', filteredFavorites.length);
+
+    // ⭐⭐ CORREÇÃO: Ordenar favoritos
+    filteredFavorites = this.sortFavorites(filteredFavorites, sortBy);
+
+    if (filteredFavorites.length === 0) {
         favoritesGrid.innerHTML = `
             <div class="col-span-3 text-center py-12">
                 <i data-feather="heart" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-                <h3 class="text-xl font-bold text-gray-500 mb-2">Nenhum favorito ainda</h3>
-                <p class="text-gray-400">Gere alguns conteúdos e adicione-os aos favoritos!</p>
+                <h3 class="text-xl font-bold text-gray-500 mb-2">
+                    ${filterType === 'all' ? 'Nenhum favorito ainda' : `Nenhum favorito do tipo ${this.getTypeLabel(filterType)}`}
+                </h3>
+                <p class="text-gray-400">
+                    ${filterType === 'all' 
+                        ? 'Gere alguns conteúdos e adicione-os aos favoritos!' 
+                        : `Gere conteúdos do tipo ${this.getTypeLabel(filterType)} e adicione-os aos favoritos!`}
+                </p>
             </div>
         `;
         feather.replace();
         return;
     }
 
-    favoritesGrid.innerHTML = this.favorites.map(fav => `
+    // ⭐⭐ CORREÇÃO: Usar filteredFavorites em vez de this.favorites
+    favoritesGrid.innerHTML = filteredFavorites.map(fav => `
         <div class="copy-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition duration-300">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center">
@@ -814,7 +856,6 @@ Formato desejado:
         });
     });
 }
-
     deleteFavorite(id) {
         this.favorites = this.favorites.filter(fav => fav.id !== id);
         this.saveFavorites();
@@ -902,6 +943,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
