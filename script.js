@@ -778,19 +778,9 @@ Formato desejado:
         return labels[type] || 'Conteúdo';
     }
 }
-// No final do script.js, adicione:
-document.addEventListener('DOMContentLoaded', function() {
-    // Listeners para todos os botões de login na página
-    document.querySelectorAll('#loginButton').forEach(button => {
-        button.addEventListener('click', function() {
-            if (window.copyCraft.user) {
-                window.copyCraft.logout();
-            } else {
-                window.copyCraft.loginWithGoogle();
-            }
-        });
-    });
-});
+
+
+// ✅ DEIXE APENAS ESTE:
 // Initialize the application
 const copyCraft = new CopyCraftPro();
 
@@ -812,13 +802,14 @@ function showSection(sectionId) {
         link.classList.remove('font-medium');
     });
     
-    // Update active link (simplified - you might want to adjust based on your navigation structure)
-    event.target.classList.add('font-medium');
+    // Update active link
+    if (event && event.target) {
+        event.target.classList.add('font-medium');
+    }
 }
 
 // Make functions globally available
 window.showSection = showSection;
-
 window.copyCraft = copyCraft;
 
 
