@@ -11,46 +11,43 @@ class CopyCraftPro {
         if (typeof feather !== 'undefined') {
             feather.replace();
         }
-
-       
         
         // Initialize event listeners
         this.initializeEventListeners();
         this.loadFavorites();
     }
 
-   
-
     initializeEventListeners() {
-    // Template generation form
-    const generateForm = document.getElementById('generateForm');
-    if (generateForm) {
-        generateForm.addEventListener('submit', (e) => this.generateContent(e));
+        // Template generation form
+        const generateForm = document.getElementById('generateForm');
+        if (generateForm) {
+            generateForm.addEventListener('submit', (e) => this.generateContent(e));
+        }
+
+        // Tone selection
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tone-option')) {
+                this.selectTone(e);
+            }
+        });
+
+        // Copy and favorite buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
+                this.copyToClipboard(e);
+            }
+            
+            if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
+                this.toggleFavorite(e);
+            }
+        });
+
+        // Template selection
+        const templateCards = document.querySelectorAll('.template-card');
+        templateCards.forEach(card => {
+            card.addEventListener('click', (e) => this.selectTemplate(e));
+        });
     }
-
-    // Tone selection
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('tone-option')) {
-            this.selectTone(e);
-        }
-    });
-
-    // Copy and favorite buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
-            this.copyToClipboard(e);
-        }
-        
-        if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
-            this.toggleFavorite(e);
-        }
-    });
-
-    // Template selection
-    const templateCards = document.querySelectorAll('.template-card');
-    templateCards.forEach(card => {
-        card.addEventListener('click', (e) => this.selectTemplate(e));
-    });
 
 
 selectTemplate(e) {
@@ -733,5 +730,6 @@ function showSection(sectionId) {
 window.showSection = showSection;
 
 window.copyCraft = copyCraft;
+
 
 
