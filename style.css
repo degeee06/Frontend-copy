@@ -1,0 +1,209 @@
+/* Tema Escuro Moderno */
+:root {
+  --primary: #8b5cf6;
+  --primary-dark: #7c3aed;
+  --secondary: #06b6d4;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --surface-light: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: #334155;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+}
+
+/* Cards e Containers */
+.bg-white {
+  background-color: var(--surface) !important;
+}
+
+.bg-gray-50 {
+  background-color: var(--surface-light) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--surface-light) !important;
+}
+
+.text-gray-600, .text-gray-700, .text-gray-800 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-400, .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Borders */
+.border-gray-300, .border-gray-200, .border-gray-100 {
+  border-color: var(--border) !important;
+}
+
+/* Inputs e Formulários */
+input, select, textarea {
+  background-color: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Botões */
+.bg-purple-600 {
+  background-color: var(--primary) !important;
+}
+
+.bg-purple-600:hover {
+  background-color: var(--primary-dark) !important;
+}
+
+.border-purple-600 {
+  border-color: var(--primary) !important;
+}
+
+.text-purple-800 {
+  color: var(--primary) !important;
+}
+
+/* Cores específicas para ícones e badges */
+.bg-pink-100 { background-color: rgba(236, 72, 153, 0.2) !important; }
+.bg-blue-100 { background-color: rgba(59, 130, 246, 0.2) !important; }
+.bg-green-100 { background-color: rgba(34, 197, 94, 0.2) !important; }
+.bg-yellow-100 { background-color: rgba(234, 179, 8, 0.2) !important; }
+.bg-red-100 { background-color: rgba(239, 68, 68, 0.2) !important; }
+
+.text-pink-600 { color: #ec4899 !important; }
+.text-blue-600 { color: #3b82f6 !important; }
+.text-green-600 { color: #22c55e !important; }
+.text-yellow-600 { color: #eab308 !important; }
+.text-red-600 { color: #ef4444 !important; }
+
+/* Footer */
+.bg-gray-900 {
+  background-color: #0a0f1c !important;
+}
+
+/* Cards com hover melhorado */
+.template-card, .copy-card, .content-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.template-card:hover, .copy-card:hover, .content-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary);
+}
+
+/* Loading states */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Scrollbar customizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+/* Modal e overlays */
+.fixed.inset-0.bg-black.bg-opacity-50 {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(5px);
+}
+
+/* Alertas e notificações */
+.bg-yellow-50 {
+  background-color: rgba(234, 179, 8, 0.1) !important;
+  border-color: rgba(234, 179, 8, 0.3) !important;
+}
+
+.text-yellow-800 {
+  color: #eab308 !important;
+}
+
+.text-yellow-700 {
+  color: #ca8a04 !important;
+}
+
+/* Seleção de template ativo */
+.border-purple-500 {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.bg-purple-50 {
+  background-color: rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Efeitos de profundidade */
+.header-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card-shadow {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
