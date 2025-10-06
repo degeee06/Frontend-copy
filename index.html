@@ -269,9 +269,86 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+        <script src="script.js"></script>
     <script>
         feather.replace();
+        
+        // ⭐⭐ SISTEMA DE LOGIN FUNCIONAL
+        const supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Atualizar UI do botão de login
+        async function updateLoginUI() {
+            const loginButton = document.getElementById('loginButton');
+            if (!loginButton) return;
+            
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (user) {
+                    const userName = user.user_metadata.full_name || user.email;
+                    loginButton.innerHTML = `
+                        <img src="${user.user_metadata.avatar_url || ''}" 
+                             class="w-6 h-6 rounded-full mr-2" 
+                             onerror="this.style.display='none'">
+                        <span class="hidden sm:inline">${userName.split(' ')[0]}</span>
+                    `;
+                    loginButton.title = `Sair (${userName})`;
+                } else {
+                    loginButton.innerHTML = '<i data-feather="log-in" class="w-4 h-4 mr-2 inline"></i>Login com Google';
+                    loginButton.title = 'Login com Google';
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar UI:', error);
+            }
+            
+            feather.replace();
+        }
+        
+        // Função principal de autenticação
+        async function handleAuth() {
+            const loginButton = document.getElementById('loginButton');
+            
+            try {
+                // Verificar estado atual
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (user) {
+                    // Usuário LOGADO - fazer logout
+                    await supabase.auth.signOut();
+                    updateLoginUI();
+                    alert('Logout realizado com sucesso!');
+                } else {
+                    // Usuário NÃO logado - fazer login
+                    loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2 inline"></i>Conectando...';
+                    loginButton.disabled = true;
+                    feather.replace();
+                    
+                    const { error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin
+                        }
+                    });
+                    
+                    if (error) throw error;
+                }
+            } catch (error) {
+                console.error('Erro de autenticação:', error);
+                alert('Erro ao conectar: ' + error.message);
+                updateLoginUI();
+            }
+        }
+        
+        // Atualizar UI quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLoginUI();
+            console.log('✅ Sistema de login carregado!');
+        });
+        
+        // Tornar função global
+        window.handleAuth = handleAuth;
         
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(section => {
@@ -289,6 +366,7 @@
     </script>
 </body>
 </html>
+
 
 
 
