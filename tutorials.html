@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutoriais - CopyCraft Pro</title>
+    <!-- Mesmos styles do index -->
+</head>
+<body class="bg-slate-900 text-white">
+    <!-- Header igual às outras páginas -->
+
+    <main class="container mx-auto px-6 py-12">
+        <!-- Hero Section -->
+        <div class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 gradient-text">Tutoriais CopyCraft Pro</h1>
+            <p class="text-xl text-slate-300 max-w-2xl mx-auto">
+                Aprenda a criar conteúdos incríveis e aumentar suas conversões
+            </p>
+        </div>
+
+        <!-- Grid de Tutoriais -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            
+            <!-- Tutorial 1: Instagram -->
+            <div class="modern-card p-6 hover-lift group">
+                <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-feather="instagram" class="text-white w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-white">Como Criar Legendas que Engajam</h3>
+                <p class="text-slate-300 mb-4">Aprenda a gerar legendas que aumentam likes e comentários</p>
+                <ul class="text-slate-400 text-sm space-y-2 mb-4">
+                    <li>• Estrutura ideal para legenda</li>
+                    <li>• Como usar hashtags estratégicas</li>
+                    <li>• Tom de voz para cada público</li>
+                </ul>
+                <button onclick="openTutorial('instagram')" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-all">
+                    Ver Tutorial
+                </button>
+            </div>
+
+            <!-- Tutorial 2: E-commerce -->
+            <div class="modern-card p-6 hover-lift group">
+                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-feather="shopping-cart" class="text-white w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-white">Descrições que Vendem Mais</h3>
+                <p class="text-slate-300 mb-4">Otimize suas descrições de produto para converter mais</p>
+                <ul class="text-slate-400 text-sm space-y-2 mb-4">
+                    <li>• Estrutura AIDA (Atenção, Interesse...)</li>
+                    <li>• Como destacar benefícios</li>
+                    <li>• CTAs que geram vendas</li>
+                </ul>
+                <button onclick="openTutorial('ecommerce')" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-all">
+                    Ver Tutorial
+                </button>
+            </div>
+
+            <!-- Tutorial 3: Facebook Ads -->
+            <div class="modern-card p-6 hover-lift group">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-feather="facebook" class="text-white w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-white">Anúncios com Alto ROI</h3>
+                <p class="text-slate-300 mb-4">Crie copys que convertem no Facebook e Google Ads</p>
+                <ul class="text-slate-400 text-sm space-y-2 mb-4">
+                    <li>• Títulos que capturam atenção</li>
+                    <li>• Textos persuasivos</li>
+                    <li>• CTAs irresistíveis</li>
+                </ul>
+                <button onclick="openTutorial('facebook')" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-all">
+                    Ver Tutorial
+                </button>
+            </div>
+
+            <!-- Tutorial 4: Email Marketing -->
+            <div class="modern-card p-6 hover-lift group">
+                <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-feather="mail" class="text-white w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-white">Emails que Abrem e Convertem</h3>
+                <p class="text-slate-300 mb-4">Aumente a taxa de abertura e conversão dos seus emails</p>
+                <ul class="text-slate-400 text-sm space-y-2 mb-4">
+                    <li>• Assuntos irresistíveis</li>
+                    <li>• Estrutura do email perfeita</li>
+                    <li>• Segmentação por persona</li>
+                </ul>
+                <button onclick="openTutorial('email')" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-all">
+                    Ver Tutorial
+                </button>
+            </div>
+
+            <!-- Tutorial 5: Dicas Gerais -->
+            <div class="modern-card p-6 hover-lift group">
+                <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-feather="zap" class="text-white w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-white">Dicas de Prompt Perfeito</h3>
+                <p class="text-slate-300 mb-4">Aprenda a dar os melhores comandos para a IA</p>
+                <ul class="text-slate-400 text-sm space-y-2 mb-4">
+                    <li>• Como ser específico</li>
+                    <li>• Exemplos de bons prompts</li>
+                    <li>• Erros comuns e como evitar</li>
+                </ul>
+                <button onclick="openTutorial('prompts')" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-all">
+                    Ver Tutorial
+                </button>
+            </div>
+
+            <!-- Tutorial 6: Favoritos -->
+            <div class="modern-card p-6 hover-lift group">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-feather="heart" class="text-white w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-white">Organize seus Conteúdos</h3>
+                <p class="text-slate-300 mb-4">Aproveite ao máximo o sistema de favoritos</p>
+                <ul class="text-slate-400 text-sm space-y-2 mb-4">
+                    <li>• Como salvar e organizar</li>
+                    <li>• Filtros e buscas</li>
+                    <li>• Exportação de conteúdos</li>
+                </ul>
+                <button onclick="openTutorial('favorites')" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-all">
+                    Ver Tutorial
+                </button>
+            </div>
+        </div>
+
+        <!-- CTA Final -->
+        <div class="text-center">
+            <h2 class="text-3xl font-bold mb-6 text-white">Pronto para Colocar em Prática?</h2>
+            <a href="templates.html" class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+                🚀 Começar a Criar Agora
+            </a>
+        </div>
+    </main>
+
+    <script>
+        function openTutorial(tutorialType) {
+            // Pode abrir modal, página específica, ou redirecionar
+            const tutorials = {
+                instagram: 'Como criar legendas engajadoras no Instagram...',
+                ecommerce: 'Descrições de produto que convertem mais...',
+                facebook: 'Anúncios com alto ROI no Facebook...',
+                email: 'Emails que abrem e convertem...',
+                prompts: 'Dicas de prompt perfeito para IA...',
+                favorites: 'Como organizar seus conteúdos...'
+            };
+            
+            // Exemplo: Abrir modal com conteúdo
+            alert(`Tutorial: ${tutorials[tutorialType]}\n\n(Em uma versão completa, aqui abriria um modal ou página detalhada)`);
+        }
+    </script>
+</body>
+</html>
