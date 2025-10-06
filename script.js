@@ -909,7 +909,7 @@ Formato desejado:
             instagram: `1. ✨ Descubra o poder do nosso produto! Transforme sua rotina com resultados incríveis 🚀\n\n👉 Experimente agora e veja a diferença!\n\n#ProdutoIncrível #Resultados #Inovação\n\n2. 🤔 Procurando uma solução eficaz? Nosso produto foi desenvolvido para oferecer o máximo em performance e qualidade!\n\n💬 Conte pra gente nos comentários!\n\n#Solução #Qualidade #Performance\n\n3. 🎉 Chegou a hora de revolucionar seu dia a dia! Com nosso produto, você alcança objetivos de forma simples e eficiente.\n\n👉 Garanta o seu com condições especiais!\n\n#Revolução #Simplicidade #Oportunidade`,
             facebook: `Título: Transforme Sua Realidade Com Nosso Produto!\n\nTexto: Descubra como nosso produto pode revolucionar sua experiência. Desenvolvido com tecnologia de ponta para oferecer resultados excepcionais. Milhares de clientes satisfeitos!\n\nCTA: Saiba Mais Agora!`,
             ecommerce: `Título: Produto Premium - Excelência em Cada Detalhe\n\nDescrição: Experimente a diferença com nosso produto de alta qualidade. Desenvolvido com materiais duráveis e design inovador, oferece performance superior e durabilidade incomparável.\n\nCaracterísticas:\n• Alta performance e eficiência\n• Design premium e moderno\n• Fácil de usar e manter\n• Garantia de satisfação`,
-            email: `Assunto: Oportunidade Exclusiva Para Você!\n\nCorpo: Prezado cliente,\n\nTemos uma novidade incrível para compartilhar! Nosso produto foi desenvolvido para oferecer a melhor experiência e resultados excepcionais.\n\nNão perca esta oportunidade única de transformar sua rotina.\n\nAtenciosamente,\nEquipe CopyCraft`,
+            email: `Assunto: Oportunidade Exclusiva Para Você!\n\nCorpo: Prezado cliente,\n\nTemos uma novidade incrível para compartilhar! Nosso produto foi desenvolvido para oferecer a melhor experiência e resultados excepcionais.\n\nNão perca esta oportunidade única de transformar sua rotina.\n\nAtenciosamente,\nEquipe Coupiator`,
             google: `Título 1: Produto Revolucionário\nTítulo 2: Resultados Comprovados\nDescrição: Descubra a excelência com nosso produto premium. Tecnologia avançada e qualidade superior. Experimente a diferença!\nPath: produtos/destaque`,
             blog: `1. 10 Maneiras Incríveis de Utilizar Nosso Produto no Dia a Dia\n2. O Guia Definitivo Para Maximizar Seus Resultados\n3. Como Nosso Produto Pode Transformar Sua Rotina\n4. Os Segredos Por Trás do Sucesso do Nosso Produto\n5. Por Que Milhares de Pessoas Escolhem Nossa Solução`
         };
@@ -1215,6 +1215,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
