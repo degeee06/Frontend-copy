@@ -42,53 +42,33 @@
     </style>
 </head>
 <body class="bg-slate-900 text-white">
-          <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="container mx-auto px-4 py-4">
+    <!-- Header Moderno -->
+    <header class="glass-effect sticky top-0 z-50 border-b border-white/10">
+        <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
-                <!-- Logo -->
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                        <i data-feather="zap" class="text-white w-4 h-4"></i>
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <i data-feather="edit-3" class="w-6 h-6 text-purple-300"></i>
                     </div>
-                    <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        CopyCraft Pro
-                    </span>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">CopyCraft Pro</span>
                 </div>
-
-                <!-- Menu Central -->
-                <nav class="hidden md:flex space-x-8">
-                    <a href="templates.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Templates</a>
-                    <a href="templates.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Recursos</a>
-                    <a href="favorites.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Favoritos</a>
+                <nav>
+                    <ul class="flex space-x-8 items-center">
+                        <li><a href="#" class="hover:text-purple-300 font-medium transition-colors" onclick="showSection('home')">Início</a></li>
+                        <li><a href="templates.html" class="hover:text-purple-300 transition-colors">Templates</a></li>
+                        <li><a href="favorites.html" class="hover:text-purple-300 transition-colors">Favoritos</a></li>
+                        <li><a href="#" class="hover:text-purple-300 transition-colors">Preços</a></li>
+                        <li>
+                            <button id="loginButton" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-full font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
+                                <i data-feather="log-in" class="w-4 h-4 mr-2 inline"></i>
+                                Login com Google
+                            </button>
+                        </li>
+                    </ul>
                 </nav>
-
-                <!-- Botões Direita -->
-                <div class="flex items-center space-x-4">
-                    <!-- Botão Upgrade Desktop -->
-                    <button onclick="window.location.href = 'checkout.html'" 
-                            class="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all items-center">
-                        <i data-feather="star" class="w-4 h-4 mr-2"></i>
-                        Fazer Upgrade
-                    </button>
-
-                    <!-- Botão Upgrade Mobile -->
-                    <button onclick="window.location.href = 'checkout.html'" 
-                            class="sm:hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white p-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
-                        <i data-feather="star" class="w-4 h-4"></i>
-                    </button>
-
-                   <!-- Botão Login -->
-<button onclick="handleAuth()" id="loginButton"
-        class="border border-purple-600 text-purple-600 px-6 py-2 rounded-lg font-bold hover:bg-purple-50 transition duration-300 flex items-center">
-    <i data-feather="log-in" class="w-4 h-4 mr-2"></i>
-    Login com Google
-</button>
-                </div>
             </div>
         </div>
     </header>
-    
 
     <!-- Hero Section Modernizada -->
     <section id="home" class="section active">
@@ -207,7 +187,7 @@
             </div>
         </section>
     </section>
-    
+
     <!-- Footer Modernizado -->
     <footer class="bg-slate-800 text-slate-400 py-16 border-t border-slate-700">
         <div class="container mx-auto px-6">
@@ -269,86 +249,9 @@
         </div>
     </footer>
 
-        <script src="script.js"></script>
+    <script src="script.js"></script>
     <script>
         feather.replace();
-        
-        // ⭐⭐ SISTEMA DE LOGIN FUNCIONAL
-        const supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-        
-        // Atualizar UI do botão de login
-        async function updateLoginUI() {
-            const loginButton = document.getElementById('loginButton');
-            if (!loginButton) return;
-            
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                if (user) {
-                    const userName = user.user_metadata.full_name || user.email;
-                    loginButton.innerHTML = `
-                        <img src="${user.user_metadata.avatar_url || ''}" 
-                             class="w-6 h-6 rounded-full mr-2" 
-                             onerror="this.style.display='none'">
-                        <span class="hidden sm:inline">${userName.split(' ')[0]}</span>
-                    `;
-                    loginButton.title = `Sair (${userName})`;
-                } else {
-                    loginButton.innerHTML = '<i data-feather="log-in" class="w-4 h-4 mr-2 inline"></i>Login com Google';
-                    loginButton.title = 'Login com Google';
-                }
-            } catch (error) {
-                console.error('Erro ao atualizar UI:', error);
-            }
-            
-            feather.replace();
-        }
-        
-        // Função principal de autenticação
-        async function handleAuth() {
-            const loginButton = document.getElementById('loginButton');
-            
-            try {
-                // Verificar estado atual
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                if (user) {
-                    // Usuário LOGADO - fazer logout
-                    await supabase.auth.signOut();
-                    updateLoginUI();
-                    alert('Logout realizado com sucesso!');
-                } else {
-                    // Usuário NÃO logado - fazer login
-                    loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2 inline"></i>Conectando...';
-                    loginButton.disabled = true;
-                    feather.replace();
-                    
-                    const { error } = await supabase.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                            redirectTo: window.location.origin
-                        }
-                    });
-                    
-                    if (error) throw error;
-                }
-            } catch (error) {
-                console.error('Erro de autenticação:', error);
-                alert('Erro ao conectar: ' + error.message);
-                updateLoginUI();
-            }
-        }
-        
-        // Atualizar UI quando a página carregar
-        document.addEventListener('DOMContentLoaded', function() {
-            updateLoginUI();
-            console.log('✅ Sistema de login carregado!');
-        });
-        
-        // Tornar função global
-        window.handleAuth = handleAuth;
         
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(section => {
@@ -366,13 +269,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
