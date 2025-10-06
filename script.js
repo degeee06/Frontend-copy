@@ -245,6 +245,7 @@ async loadFavoritesFromSupabase() {
                 .from('user_trials')
                 .insert([{ 
                     user_id: this.user.id,
+                    user_email: this.user.email,
                     started_at: new Date().toISOString(),
                     ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
                     status: 'active'
@@ -1215,6 +1216,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
