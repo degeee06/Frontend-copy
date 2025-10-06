@@ -758,7 +758,7 @@ updateTemplateForm(templateType) {
                     <i data-feather="star" class="text-purple-600 w-8 h-8"></i>
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                    ${hasActiveTrial ? 'Faça Upgrade para Pro' : 'Junte-se ao CopyCraft Pro'}
+                    ${hasActiveTrial ? 'Faça Upgrade para Pro' : 'Junte-se ao Coupiator Pro'}
                 </h3>
                 <p class="text-gray-600 mb-4">
                     ${hasActiveTrial 
@@ -1215,6 +1215,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
