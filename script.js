@@ -745,7 +745,7 @@ updateTemplateForm(templateType) {
     }
 
         // ⭐⭐ MÉTODO PARA MOSTRAR OPÇÕES DE UPGRADE
-    showUpgradeOptions() {
+     async showUpgradeOptions() { 
         const trialStatus = this.user ? await this.checkTrialStatus() : null;
         const hasActiveTrial = trialStatus?.hasTrial;
         const daysLeft = trialStatus?.daysLeft || 0;
@@ -1215,6 +1215,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
