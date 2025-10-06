@@ -42,7 +42,7 @@
     </style>
 </head>
 <body class="bg-slate-900 text-white">
-       <!-- Header -->
+      <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
@@ -58,25 +58,20 @@
 
                 <!-- Menu Central -->
                 <nav class="hidden md:flex space-x-8">
-                    <a href="templates.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Templates</a>
-                    <a href="templates.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Recursos</a>
+                    <a href="index.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Início</a>
+                    <a href="index.html#templates" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Templates</a>
+                    <a href="index.html#features" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Recursos</a>
                     <a href="favorites.html" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Favoritos</a>
                 </nav>
 
                 <!-- Botões Direita -->
                 <div class="flex items-center space-x-4">
-                    <!-- Botão Upgrade Desktop -->
-                    <button onclick="window.location.href = 'checkout.html'" 
-                            class="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all items-center">
-                        <i data-feather="star" class="w-4 h-4 mr-2"></i>
-                        Fazer Upgrade
-                    </button>
-
-                    <!-- Botão Upgrade Mobile -->
-                    <button onclick="window.location.href = 'checkout.html'" 
-                            class="sm:hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white p-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
-                        <i data-feather="star" class="w-4 h-4"></i>
-                    </button>
+                   <!-- Botão Upgrade - VAI DIRETO PARA CHECKOUT -->
+<button onclick="window.location.href = 'checkout.html'" 
+        class="hidden sm:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all items-center">
+    <i data-feather="star" class="w-4 h-4 mr-2"></i>
+    Fazer Upgrade
+</button>
 
                     <!-- Botão Login -->
                     <button id="loginButton" 
@@ -88,6 +83,12 @@
             </div>
         </div>
     </header>
+
+<!-- Mobile -->
+<button onclick="window.location.href = 'checkout.html'" 
+        class="sm:hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white p-2 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+    <i data-feather="star" class="w-4 h-4"></i>
+</button>
 
     <!-- Hero Section Modernizada -->
     <section id="home" class="section active">
@@ -288,4 +289,5 @@
     </script>
 </body>
 </html>
+
 
