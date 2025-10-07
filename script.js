@@ -409,18 +409,6 @@ async debugTrial() {
             return false;
         }
         
-        console.log('📊 Trial atual:', {
-            id: trial.id,
-            status: trial.status,
-            usage_count: trial.usage_count,
-            max_usages: trial.max_usages
-        });
-        
-        if (trial.status !== 'active') {
-            console.log('❌ Trial não está ativo:', trial.status);
-            return false;
-        }
-        
         const currentUsage = trial.usage_count || 0;
         const maxUsages = trial.max_usages || 5;
         const newUsageCount = currentUsage + 1;
@@ -431,7 +419,7 @@ async debugTrial() {
         if (newUsageCount > maxUsages) {
             console.log('🚫 Limite de usos atingido');
             
-            const { error: updateError } = await this.supabase
+            await this.supabase
                 .from('user_trials')
                 .update({
                     usage_count: newUsageCount,
@@ -440,56 +428,40 @@ async debugTrial() {
                 })
                 .eq('id', trial.id);
             
-            if (updateError) {
-                console.error('❌ Erro ao atualizar trial para expirado:', updateError);
-            } else {
-                console.log('✅ Trial marcado como expirado');
-            }
-            
             return false;
         }
         
-        // ⭐⭐ CORREÇÃO: Testar diferentes formas de UPDATE
-        console.log('🔄 Tentando UPDATE no trial ID:', trial.id);
-        
-        // Tentativa 1: UPDATE simples
-        const { data, error } = await this.supabase
+        // ⭐⭐ CORREÇÃO: Fazer UPDATE sem .select() primeiro
+        const { error } = await this.supabase
             .from('user_trials')
             .update({ 
                 usage_count: newUsageCount 
             })
-            .eq('id', trial.id)
-            .select();
+            .eq('id', trial.id);
         
         if (error) {
             console.error('❌ Erro no UPDATE:', error);
-            
-            // Tentativa 2: UPDATE com mais campos
-            const { data: data2, error: error2 } = await this.supabase
-                .from('user_trials')
-                .update({ 
-                    usage_count: newUsageCount,
-                    status: 'active' // manter ativo
-                })
-                .eq('id', trial.id)
-                .select();
-                
-            if (error2) {
-                console.error('❌ Erro na segunda tentativa:', error2);
-                return false;
-            }
-            
-            console.log('✅ Uso registrado (tentativa 2):', data2);
-        } else {
-            console.log('✅ Uso registrado (tentativa 1):', data);
+            return false;
         }
         
-        // ⭐⭐ VERIFICAÇÃO: Buscar dados atualizados
+        console.log('✅ UPDATE executado com sucesso');
+        
+        // ⭐⭐ AGUARDAR um pouco e verificar se realmente atualizou
         setTimeout(async () => {
             const updatedTrial = await this.getUserTrial();
-            console.log('🔄 Trial após UPDATE:', updatedTrial);
+            console.log('🔄 Verificação pós-UPDATE:', {
+                antes: currentUsage,
+                depois: updatedTrial?.usage_count
+            });
+            
+            if (updatedTrial?.usage_count === newUsageCount) {
+                console.log('🎉 UPDATE confirmado no banco!');
+            } else {
+                console.log('⚠️ UPDATE não refletiu no banco');
+            }
+            
             await this.updateTrialBadge();
-        }, 1000);
+        }, 2000);
         
         return true;
         
@@ -1351,6 +1323,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
