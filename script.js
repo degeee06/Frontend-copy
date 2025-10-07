@@ -241,7 +241,7 @@ class CopyCraftPro {
         }
     }
 
-  async startTrial() {
+ async startTrial() {
     if (!this.user) return;
     
     try {
@@ -251,15 +251,31 @@ class CopyCraftPro {
         if (existingTrial) {
             console.log('✅ Trial já existe:', existingTrial);
             
-            // ⭐⭐ CORREÇÃO: NÃO resetar os usos se o trial já existe!
-            // Apenas garantir que está ativo se ainda tem usos
+            // ⭐⭐ CORREÇÃO: Se tem mais de 5 usos, forçar status expired
+            if (existingTrial.usage_count >= 5) {
+                console.log('🚫 Trial com usos esgotados, mantendo expirado');
+                
+                // Garantir que está como expired
+                if (existingTrial.status !== 'expired') {
+                    await this.supabase
+                        .from('user_trials')
+                        .update({
+                            status: 'expired',
+                            ended_at: new Date().toISOString()
+                        })
+                        .eq('id', existingTrial.id);
+                }
+                return existingTrial;
+            }
+            
+            // Se o trial está ativo, manter
             if (existingTrial.status === 'active') {
                 console.log('🔄 Trial ativo mantido com usos atuais');
                 return existingTrial;
             }
             
             // Se o trial está expirado mas tem menos de 5 usos, reativar
-            if (existingTrial.usage_count < 5) {
+            if (existingTrial.status === 'expired' && existingTrial.usage_count < 5) {
                 console.log('🔄 Reativando trial expirado com usos disponíveis');
                 
                 const { data, error } = await this.supabase
@@ -276,12 +292,10 @@ class CopyCraftPro {
                 return data;
             }
             
-            // Se tem 5+ usos e está expirado, manter expirado
-            console.log('❌ Trial expirado com usos esgotados');
             return existingTrial;
         }
         
-        // ⭐⭐ Só criar novo trial se não existir nenhum
+        // Só criar novo trial se não existir nenhum
         console.log('🔄 Criando NOVO trial...');
         return await this.createNewTrial();
         
@@ -290,7 +304,7 @@ class CopyCraftPro {
         return null;
     }
 }
-
+    
 async createNewTrial() {
     try {
         const { data, error } = await this.supabase
@@ -382,7 +396,7 @@ async debugTrial() {
     }
 }
 
-  async registerUsage() {
+ async registerUsage() {
     if (!this.user) return false;
     
     try {
@@ -401,14 +415,14 @@ async debugTrial() {
         
         console.log(`🎯 Novo uso: ${currentUsage} → ${newUsageCount}/${maxUsages}`);
         
-        // Verificar se atingiu o limite
-        if (newUsageCount > maxUsages) {
+        // ⭐⭐ CORREÇÃO: Bloquear em 5 usos exatos
+        if (newUsageCount >= maxUsages) {
             console.log('🚫 Limite de usos atingido');
             
             await this.supabase
                 .from('user_trials')
                 .update({
-                    usage_count: newUsageCount,
+                    usage_count: maxUsages, // ⭐⭐ Não deixar passar de 5
                     status: 'expired',
                     ended_at: new Date().toISOString()
                 })
@@ -417,7 +431,7 @@ async debugTrial() {
             return false;
         }
         
-        // ⭐⭐ CORREÇÃO: Fazer UPDATE sem .select() primeiro
+        // UPDATE normal
         const { error } = await this.supabase
             .from('user_trials')
             .update({ 
@@ -432,22 +446,10 @@ async debugTrial() {
         
         console.log('✅ UPDATE executado com sucesso');
         
-        // ⭐⭐ AGUARDAR um pouco e verificar se realmente atualizou
+        // Aguardar e verificar a atualização
         setTimeout(async () => {
-            const updatedTrial = await this.getUserTrial();
-            console.log('🔄 Verificação pós-UPDATE:', {
-                antes: currentUsage,
-                depois: updatedTrial?.usage_count
-            });
-            
-            if (updatedTrial?.usage_count === newUsageCount) {
-                console.log('🎉 UPDATE confirmado no banco!');
-            } else {
-                console.log('⚠️ UPDATE não refletiu no banco');
-            }
-            
             await this.updateTrialBadge();
-        }, 2000);
+        }, 1000);
         
         return true;
         
@@ -1309,6 +1311,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
