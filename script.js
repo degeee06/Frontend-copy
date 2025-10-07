@@ -790,7 +790,7 @@ updateTemplateForm(templateType) {
     }
 
     
-      async generateContent(e) {
+   async generateContent(e) {
     e.preventDefault();
     
     if (!this.user) {
@@ -1343,6 +1343,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
