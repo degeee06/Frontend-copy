@@ -336,7 +336,6 @@ async startTrial() {
         }
     }
 
-// ⭐⭐ ADICIONE APENAS ESTA FUNÇÃO NOVA (após getUserTrial):
 async registerUsage() {
     if (!this.user) return false;
     
@@ -352,25 +351,27 @@ async registerUsage() {
         
         console.log('📊 Trial antes do uso:', trial);
         
-        // ⭐⭐ SISTEMA SIMPLES: usar ends_at como contador
         const currentUsage = trial.usage_count || 0;
         const newUsageCount = currentUsage + 1;
         
         console.log(`🎯 Novo uso: ${newUsageCount}/5`);
         
-        // Verificar se atingiu o limite
         if (newUsageCount >= 5) {
             console.log('🚫 Limite de 5 usos atingido');
             
-            // Marcar como expirado
-            const { error } = await this.supabase
+            // ⭐⭐ DEBUG DO UPDATE
+            console.log('🐛 DEBUG - Tentando EXPIRAR trial...');
+            const { data, error } = await this.supabase
                 .from('user_trials')
                 .update({
                     usage_count: newUsageCount,
                     status: 'expired',
                     ended_at: new Date().toISOString()
                 })
-                .eq('user_id', this.user.id);
+                .eq('user_id', this.user.id)
+                .select(); // ⭐⭐ ADICIONE .select() para ver o retorno
+            
+            console.log('🐛 DEBUG - Resposta do UPDATE (expirar):', { data, error });
             
             if (error) {
                 console.error('❌ Erro ao expirar trial:', error);
@@ -380,25 +381,29 @@ async registerUsage() {
             return false;
         }
         
-        // ⭐⭐ Atualizar contador
-        const { error } = await this.supabase
+        // ⭐⭐ DEBUG DO UPDATE
+        console.log('🐛 DEBUG - Tentando ATUALIZAR uso...');
+        const { data, error } = await this.supabase
             .from('user_trials')
             .update({
                 usage_count: newUsageCount
             })
-            .eq('user_id', this.user.id);
+            .eq('user_id', this.user.id)
+            .select(); // ⭐⭐ ADICIONE .select() para ver o retorno
+        
+        console.log('🐛 DEBUG - Resposta do UPDATE:', { data, error });
         
         if (error) {
             console.error('❌ Erro ao atualizar uso:', error);
-            return true; // ⭐⭐ Permite usar mesmo com erro
+            return true;
         }
         
-        console.log('✅ Uso registrado com sucesso');
+        console.log('✅ Uso registrado com sucesso - Dados atualizados:', data);
         return true;
         
     } catch (error) {
         console.error('❌ Erro inesperado ao registrar uso:', error);
-        return true; // ⭐⭐ Permite usar mesmo com erro
+        return true;
     }
 }
 
@@ -1350,6 +1355,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
