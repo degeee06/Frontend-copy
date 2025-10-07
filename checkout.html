@@ -147,54 +147,29 @@
         </div>
     </div>
 
-<!-- NO FINAL do checkout.html - ANTES de </body> -->
 <script>
-// ⭐⭐ INTEGRAÇÃO COM HOTMART ⭐⭐
-async function processHotmartPayment() {
-    try {
-        // Mostrar loading
-        const button = event.target;
-        const originalText = button.innerHTML;
-        button.innerHTML = '🔄 Redirecionando para pagamento...';
-        button.disabled = true;
-
-        // ⭐⭐ DADOS DA SUA ASSINATURA NO HOTMART ⭐⭐
-        const hotmartProductCode = "SEU_PRODUCT_CODE_AQUI"; // Pegue no painel Hotmart
-        const hotmartPrice = "29.90";
-        const hotmartCurrency = "BRL";
-
-        // ⭐⭐ REDIRECIONAR PARA CHECKOUT HOTMART ⭐⭐
-        const checkoutUrl = `https://pay.hotmart.com/${hotmartProductCode}?checkoutMode=DEFAULT`;
-        
-        // Ou use este formato para mais personalização:
-        // const checkoutUrl = `https://pay.hotmart.com/${hotmartProductCode}?checkoutMode=DEFAULT&price=${hotmartPrice}&currency=${hotmartCurrency}`;
-        
-        window.location.href = checkoutUrl;
-
-    } catch (error) {
-        console.error('❌ Erro no pagamento:', error);
-        alert('Erro ao processar pagamento. Tente novamente.');
-        
-        // Restaurar botão
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }
+// ⭐⭐ PRODUÇÃO - INTEGRAÇÃO HOTMART ⭐⭐
+function processHotmartPayment() {
+    // ⭐⭐ SEU PRODUCT CODE REAL ⭐⭐
+    const HOTMART_PRODUCT_CODE = "V102294085N";
+    
+    // ⭐⭐ URL OFICIAL HOTMART ⭐⭐
+    const checkoutUrl = `https://pay.hotmart.com/${HOTMART_PRODUCT_CODE}?checkoutMode=2`;
+    
+    // Redirecionar para checkout oficial
+    window.location.href = checkoutUrl;
 }
 
-// ⭐⭐ VERIFICAR STATUS APÓS RETORNO DO CHECKOUT ⭐⭐
+// ⭐⭐ VERIFICAR STATUS APÓS PAGAMENTO ⭐⭐
 function checkPaymentStatus() {
     const urlParams = new URLSearchParams(window.location.search);
-    const purchaseStatus = urlParams.get('purchaseStatus');
     
-    if (purchaseStatus === 'APPROVED') {
+    if (urlParams.get('purchaseStatus') === 'APPROVED') {
         showSuccessMessage();
-    } else if (purchaseStatus === 'CANCELLED') {
-        showCancelledMessage();
     }
 }
 
 function showSuccessMessage() {
-    // Substituir o conteúdo da página por mensagem de sucesso
     document.querySelector('main').innerHTML = `
         <div class="max-w-2xl mx-auto text-center py-16">
             <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -215,26 +190,7 @@ function showSuccessMessage() {
     feather.replace();
 }
 
-function showCancelledMessage() {
-    document.querySelector('main').innerHTML += `
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white p-8 rounded-2xl max-w-md mx-4 text-center">
-                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-feather="alert-triangle" class="text-yellow-600 w-8 h-8"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-4">Pagamento Cancelado</h3>
-                <p class="text-gray-600 mb-6">O processo de pagamento foi cancelado. Você pode tentar novamente quando quiser.</p>
-                <button onclick="this.closest('.fixed').remove()" 
-                        class="bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-all">
-                    Fechar
-                </button>
-            </div>
-        </div>
-    `;
-    feather.replace();
-}
-
-// ⭐⭐ EXECUTAR AO CARREGAR A PÁGINA ⭐⭐
+// Executar ao carregar
 document.addEventListener('DOMContentLoaded', function() {
     checkPaymentStatus();
     feather.replace();
