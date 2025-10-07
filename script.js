@@ -231,45 +231,86 @@ async loadFavoritesFromSupabase() {
     }
 }
 
-      // ⭐⭐ SUBSTITUA a função startTrial atual por esta:
+     // ⭐⭐ SUBSTITUA a função startTrial por esta versão CORRIGIDA:
 async startTrial() {
-    if (!this.user) return;
+    if (!this.user) return null;
     
     try {
-        // Verificar se já existe trial
-        const existingTrial = await this.getUserTrial();
+        console.log('🔄 Iniciando trial para:', this.user.email);
         
+        // Primeiro verificar se já existe trial ativo
+        const { data: existingTrial, error: fetchError } = await this.supabase
+            .from('user_trials')
+            .select('*')
+            .eq('user_id', this.user.id)
+            .eq('status', 'active')
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            console.error('❌ Erro ao buscar trial:', fetchError);
+        }
+
         if (existingTrial) {
-            console.log('✅ Trial já existe, reutilizando:', existingTrial);
+            console.log('✅ Trial já existe:', existingTrial);
             return existingTrial;
         }
-        
-        // ⭐⭐ NOVO: Criar trial com limite de USOS ⭐⭐
+
+        // ⭐⭐ Criar NOVO trial com estrutura correta
+        const trialData = {
+            user_id: this.user.id,
+            user_email: this.user.email,
+            started_at: new Date().toISOString(),
+            usage_limit_type: 'usages',
+            max_usages: 5,
+            usage_count: 0,
+            status: 'active',
+            created_at: new Date().toISOString()
+        };
+
+        console.log('📝 Tentando criar trial:', trialData);
+
         const { data, error } = await this.supabase
             .from('user_trials')
-            .insert([{ 
-                user_id: this.user.id,
-                user_email: this.user.email,
-                started_at: new Date().toISOString(),
-                usage_limit_type: 'usages',
-                max_usages: 5,
-                usage_count: 0,
-                status: 'active'
-            }])
+            .insert([trialData])
             .select()
             .single();
-            
-        if (error) throw error;
-        
-        console.log('🎉 NOVO Trial criado (5 usos):', data);
+
+        if (error) {
+            console.error('❌ Erro detalhado ao criar trial:', error);
+            throw error;
+        }
+
+        console.log('🎉 NOVO Trial criado com sucesso:', data);
         return data;
         
     } catch (error) {
         console.error('❌ Erro ao iniciar trial:', error);
-        return null;
+        
+        // ⭐⭐ FALLBACK: Criar trial simplificado se o complexo falhar
+        try {
+            console.log('🔄 Tentando fallback...');
+            const { data: fallbackData, error: fallbackError } = await this.supabase
+                .from('user_trials')
+                .insert([{
+                    user_id: this.user.id,
+                    user_email: this.user.email,
+                    started_at: new Date().toISOString(),
+                    status: 'active'
+                }])
+                .select()
+                .single();
+
+            if (fallbackError) throw fallbackError;
+            
+            console.log('✅ Trial fallback criado:', fallbackData);
+            return fallbackData;
+            
+        } catch (fallbackError) {
+            console.error('❌ Erro no fallback também:', fallbackError);
+            return null;
+        }
     }
 }
-
 
     // ⭐⭐ ADICIONE esta função NOVA após a função startTrial:
 async registerUsage() {
@@ -342,32 +383,78 @@ async registerUsage() {
     }
 }
     
-          async getUserTrial() {
-        if (!this.user) return null;
+        // ⭐⭐ ATUALIZE a função getUserTrial:
+async getUserTrial() {
+    if (!this.user) return null;
+    
+    try {
+        console.log('🔍 Buscando trial para:', this.user.id);
         
-        try {
-            // ⭐⭐ PEGAR O TRIAL MAIS RECENTE (ordem decrescente por created_at)
-            const { data, error } = await this.supabase
-                .from('user_trials')
-                .select('*')
-                .eq('user_id', this.user.id)
-                .order('created_at', { ascending: false }) // ⭐⭐ MAIS RECENTE PRIMEIRO
-                .limit(1) // ⭐⭐ APENAS 1 REGISTRO
-                .maybeSingle();
-                
-            if (error) {
-                console.error('❌ Erro ao buscar trial:', error);
-                return null;
-            }
+        const { data, error } = await this.supabase
+            .from('user_trials')
+            .select('*')
+            .eq('user_id', this.user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(); // ⭐⭐ Use maybeSingle em vez de single
             
-            console.log('📊 Trial mais recente:', data);
-            return data;
-        } catch (error) {
+        if (error) {
             console.error('❌ Erro ao buscar trial:', error);
             return null;
         }
+        
+        if (!data) {
+            console.log('📭 Nenhum trial encontrado');
+            return null;
+        }
+        
+        console.log('✅ Trial encontrado:', data);
+        return data;
+        
+    } catch (error) {
+        console.error('❌ Erro inesperado ao buscar trial:', error);
+        return null;
     }
+}
 
+    // ⭐⭐ ADICIONE esta função para debug (após a classe):
+async debugTrialTable() {
+    if (!this.user) return;
+    
+    try {
+        console.log('🐛 DEBUG: Verificando tabela user_trials...');
+        
+        const { data, error } = await this.supabase
+            .from('user_trials')
+            .select('*')
+            .eq('user_id', this.user.id);
+            
+        if (error) {
+            console.error('❌ DEBUG - Erro ao verificar tabela:', error);
+            return;
+        }
+        
+        console.log('🐛 DEBUG - Dados na tabela:', data);
+        
+    } catch (error) {
+        console.error('❌ DEBUG - Erro inesperado:', error);
+    }
+}
+
+// E chame no init para debug:
+async init() {
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+    
+    await this.checkAuthState();
+    
+    // ⭐⭐ DEBUG: Verificar tabela
+    await this.debugTrialTable();
+    
+    this.initializeEventListeners();
+    await this.loadFavorites();
+}
     
             // ⭐⭐ SUBSTITUA a função checkTrialStatus atual por esta:
 async checkTrialStatus() {
@@ -1337,6 +1424,7 @@ function showSection(sectionId) {
 window.showSection = showSection;
 window.copyCraft = copyCraft;
 window.checkUserSubscription = checkUserSubscription;
+
 
 
 
