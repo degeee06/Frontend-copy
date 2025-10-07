@@ -457,11 +457,13 @@ async init() {
 }
     
             // ⭐⭐ SUBSTITUA a função checkTrialStatus atual por esta:
+// ⭐⭐ SUBSTITUA a função checkTrialStatus por esta versão CORRIGIDA:
 async checkTrialStatus() {
     try {
         const trial = await this.getUserTrial();
         
         if (!trial) {
+            console.log('❌ Nenhum trial encontrado');
             return { 
                 hasTrial: false, 
                 message: 'Sem trial ativo',
@@ -470,7 +472,10 @@ async checkTrialStatus() {
             };
         }
         
+        console.log('🔍 Trial encontrado:', trial);
+        
         if (trial.status !== 'active') {
+            console.log('❌ Trial não está ativo:', trial.status);
             return { 
                 hasTrial: false, 
                 message: 'Trial expirado',
@@ -479,41 +484,66 @@ async checkTrialStatus() {
             };
         }
         
-        // ⭐⭐ VERIFICAR LIMITE POR USOS ⭐⭐
+        // ⭐⭐ VERIFICAR LIMITE POR USOS (SISTEMA NOVO) ⭐⭐
         if (trial.usage_limit_type === 'usages') {
-            const usagesLeft = trial.max_usages - (trial.usage_count || 0);
+            const currentUsage = trial.usage_count || 0;
+            const usagesLeft = trial.max_usages - currentUsage;
+            
+            console.log(`📊 Usos: ${currentUsage}/${trial.max_usages} | Restantes: ${usagesLeft}`);
+            
+            if (usagesLeft <= 0) {
+                console.log('🚫 Limite de usos atingido');
+                return { 
+                    hasTrial: false, 
+                    message: 'Limite de usos atingido',
+                    usagesLeft: 0,
+                    totalUsages: trial.max_usages
+                };
+            }
             
             return {
-                hasTrial: usagesLeft > 0,
+                hasTrial: true,
                 message: `${usagesLeft} usos restantes`,
                 usagesLeft: usagesLeft,
                 totalUsages: trial.max_usages,
-                usageCount: trial.usage_count || 0,
+                usageCount: currentUsage,
                 type: 'usages'
             };
         }
         
-        // ⭐⭐ VERIFICAR LIMITE POR DIAS (fallback) ⭐⭐
-        const now = new Date();
-        const endsAt = new Date(trial.ends_at);
-        const isTrialActive = endsAt > now;
-        const timeDiff = endsAt.getTime() - now.getTime();
-        const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
-        
-        if (!isTrialActive) {
-            return { 
-                hasTrial: false, 
-                message: 'Trial expirado',
-                usagesLeft: 0,
-                totalUsages: 5
+        // ⭐⭐ SISTEMA ANTIGO (DIAS) - FALLBACK ⭐⭐
+        console.log('⚠️ Usando sistema antigo (dias)');
+        if (trial.ends_at) {
+            const now = new Date();
+            const endsAt = new Date(trial.ends_at);
+            
+            if (now > endsAt) {
+                console.log('❌ Trial expirado por data');
+                return { 
+                    hasTrial: false, 
+                    message: 'Trial expirado',
+                    usagesLeft: 0,
+                    totalUsages: 5
+                };
+            }
+            
+            const timeDiff = endsAt.getTime() - now.getTime();
+            const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+            
+            return {
+                hasTrial: true,
+                message: `${daysLeft} dias restantes`,
+                daysLeft: daysLeft,
+                type: 'days'
             };
         }
         
+        // ⭐⭐ SE NEM USOS NEM DIAS - CONSIDERAR ATIVO ⭐⭐
+        console.log('✅ Trial ativo (sem limites definidos)');
         return {
             hasTrial: true,
-            message: `${daysLeft} dias restantes`,
-            daysLeft: daysLeft,
-            type: 'days'
+            message: 'Trial ativo',
+            type: 'unlimited'
         };
         
     } catch (error) {
@@ -899,35 +929,44 @@ async generateContent(e) {
     submitBtn.disabled = false;
     feather.replace();
 }
-       // ⭐⭐ MODAL DE TRIAL EXPIRADO
-    showTrialExpiredModal(trialStatus) {
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        modal.innerHTML = `
-            <div class="bg-white p-8 rounded-2xl max-w-md w-full mx-4 text-center">
-                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-feather="clock" class="text-yellow-600 w-8 h-8"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-4">Trial Expirado</h3>
-                <p class="text-gray-600 mb-6">
-                    Seu período de teste de 7 dias acabou. 
-                    Assine agora para continuar gerando conteúdos incríveis!
-                </p>
-                <div class="space-y-3">
-                    <button onclick="copyCraft.upgradeToPro()" 
-                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
-                        🚀 Assinar Agora - R$ 29,90/mês
-                    </button>
-                    <button onclick="this.closest('.fixed').remove()" 
-                            class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
-                        Talvez depois
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        feather.replace();
+      // ⭐⭐ ATUALIZE a função showTrialExpiredModal:
+showTrialExpiredModal(trialStatus = null) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    
+    let message = 'Seus usos gratuitos acabaram.';
+    let title = 'Usos Esgotados';
+    
+    if (trialStatus && trialStatus.type === 'days') {
+        message = 'Seu período de teste de 7 dias acabou.';
+        title = 'Trial Expirado';
     }
+    
+    modal.innerHTML = `
+        <div class="bg-white p-8 rounded-2xl max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-feather="clock" class="text-yellow-600 w-8 h-8"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">${title}</h3>
+            <p class="text-gray-600 mb-6">
+                ${message} 
+                Assine agora para continuar gerando conteúdos incríveis!
+            </p>
+            <div class="space-y-3">
+                <button onclick="copyCraft.upgradeToPro()" 
+                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+                    🚀 Assinar Agora - R$ 30,00/mês
+                </button>
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
+                    Talvez depois
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    feather.replace();
+}
 
    // ⭐⭐ MÉTODO PARA UPGRADE (placeholder)
     upgradeToPro() {
@@ -1424,6 +1463,7 @@ function showSection(sectionId) {
 window.showSection = showSection;
 window.copyCraft = copyCraft;
 window.checkUserSubscription = checkUserSubscription;
+
 
 
 
