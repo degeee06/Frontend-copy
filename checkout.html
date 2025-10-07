@@ -81,10 +81,12 @@
                         </li>
                     </ul>
                     
-                    <button onclick="processPayment()" 
-                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg">
-                        🚀 Assinar Agora
-                    </button>
+                    <!-- NO checkout.html - SUBSTITUA o botão atual por este: -->
+<button onclick="processHotmartPayment()" 
+        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg">
+    🚀 Assinar Agora - R$ 30,00/mês
+</button>
+       
                     
                     <p class="text-center text-gray-500 text-sm mt-4">
                         Cancelamento a qualquer momento • 7 dias de garantia
@@ -145,6 +147,100 @@
         </div>
     </div>
 
+<!-- NO FINAL do checkout.html - ANTES de </body> -->
+<script>
+// ⭐⭐ INTEGRAÇÃO COM HOTMART ⭐⭐
+async function processHotmartPayment() {
+    try {
+        // Mostrar loading
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '🔄 Redirecionando para pagamento...';
+        button.disabled = true;
+
+        // ⭐⭐ DADOS DA SUA ASSINATURA NO HOTMART ⭐⭐
+        const hotmartProductCode = "SEU_PRODUCT_CODE_AQUI"; // Pegue no painel Hotmart
+        const hotmartPrice = "29.90";
+        const hotmartCurrency = "BRL";
+
+        // ⭐⭐ REDIRECIONAR PARA CHECKOUT HOTMART ⭐⭐
+        const checkoutUrl = `https://pay.hotmart.com/${hotmartProductCode}?checkoutMode=DEFAULT`;
+        
+        // Ou use este formato para mais personalização:
+        // const checkoutUrl = `https://pay.hotmart.com/${hotmartProductCode}?checkoutMode=DEFAULT&price=${hotmartPrice}&currency=${hotmartCurrency}`;
+        
+        window.location.href = checkoutUrl;
+
+    } catch (error) {
+        console.error('❌ Erro no pagamento:', error);
+        alert('Erro ao processar pagamento. Tente novamente.');
+        
+        // Restaurar botão
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+// ⭐⭐ VERIFICAR STATUS APÓS RETORNO DO CHECKOUT ⭐⭐
+function checkPaymentStatus() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const purchaseStatus = urlParams.get('purchaseStatus');
+    
+    if (purchaseStatus === 'APPROVED') {
+        showSuccessMessage();
+    } else if (purchaseStatus === 'CANCELLED') {
+        showCancelledMessage();
+    }
+}
+
+function showSuccessMessage() {
+    // Substituir o conteúdo da página por mensagem de sucesso
+    document.querySelector('main').innerHTML = `
+        <div class="max-w-2xl mx-auto text-center py-16">
+            <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i data-feather="check" class="text-green-600 w-12 h-12"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">🎉 Parabéns!</h1>
+            <p class="text-xl text-gray-600 mb-8">Sua assinatura foi ativada com sucesso!</p>
+            <div class="bg-green-50 border border-green-200 rounded-2xl p-6 mb-8">
+                <p class="text-green-800 mb-4">✅ Agora você tem acesso completo ao Coupiator Pro</p>
+                <p class="text-green-700">Acesse sua conta e comece a gerar conteúdos incríveis!</p>
+            </div>
+            <button onclick="window.location.href = 'templates.html'" 
+                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+                🚀 Começar a Usar
+            </button>
+        </div>
+    `;
+    feather.replace();
+}
+
+function showCancelledMessage() {
+    document.querySelector('main').innerHTML += `
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-8 rounded-2xl max-w-md mx-4 text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-feather="alert-triangle" class="text-yellow-600 w-8 h-8"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Pagamento Cancelado</h3>
+                <p class="text-gray-600 mb-6">O processo de pagamento foi cancelado. Você pode tentar novamente quando quiser.</p>
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-all">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    `;
+    feather.replace();
+}
+
+// ⭐⭐ EXECUTAR AO CARREGAR A PÁGINA ⭐⭐
+document.addEventListener('DOMContentLoaded', function() {
+    checkPaymentStatus();
+    feather.replace();
+});
+</script>
+    
     <script>
         // Inicializar feather icons
         feather.replace();
