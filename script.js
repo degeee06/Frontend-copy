@@ -50,38 +50,6 @@ class CopyCraftPro {
     }
 
 
-// NO script.js - ADICIONE esta função:
-async function checkUserSubscription() {
-    if (!copyCraft.user) return null;
-    
-    try {
-        const response = await fetch(`https://backend-copy-1e16.onrender.com/api/subscription/${copyCraft.user.email}`);
-        const subscription = await response.json();
-        
-        return subscription;
-    } catch (error) {
-        console.error('❌ Erro ao verificar assinatura:', error);
-        return null;
-    }
-}
-
-// E atualize a função checkTrialStatus para verificar assinatura também:
-async function checkTrialStatus() {
-    // Primeiro verifica se tem assinatura ativa
-    const subscription = await checkUserSubscription();
-    
-    if (subscription && subscription.status === 'active') {
-        return { 
-            hasActivePlan: true, 
-            message: 'Plano Ativo',
-            type: 'subscription'
-        };
-    }
-    
-    // Se não tem assinatura, verifica trial
-    // ... (seu código atual de trial)
-}
-
     
    async loginWithGoogle() {
     const loginButton = document.getElementById('loginButton');
@@ -153,25 +121,20 @@ async function checkTrialStatus() {
         }
     }
 
-   // ⭐⭐ ATUALIZE updateTrialBadge ⭐⭐
-async updateTrialBadge() {
-    const trialBadge = document.getElementById('trialBadge');
-    if (!trialBadge) return;
-    
-    const trialStatus = await this.checkTrialStatus();
-    
-    if (trialStatus.hasTrial) {
-        if (trialStatus.type === 'usages') {
-            trialBadge.textContent = `🎯 ${trialStatus.usagesLeft}/5`;
-        } else {
+    async updateTrialBadge() {
+        const trialBadge = document.getElementById('trialBadge');
+        if (!trialBadge) return;
+        
+        const trialStatus = await this.checkTrialStatus();
+        if (trialStatus.hasTrial) {
             trialBadge.textContent = `🎯 ${trialStatus.daysLeft}d`;
+            trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+        } else {
+            trialBadge.textContent = '💔 Expirado';
+            trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
         }
-        trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-    } else {
-        trialBadge.textContent = '💔 Expirado';
-        trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     }
-}
+
     
    initializeEventListeners() {
     // Template generation form
@@ -268,7 +231,7 @@ async loadFavoritesFromSupabase() {
     }
 }
 
-      // ⭐⭐ ATUALIZE A FUNÇÃO startTrial ⭐⭐
+      // ⭐⭐ SUBSTITUA a função startTrial atual por esta:
 async startTrial() {
     if (!this.user) return;
     
@@ -307,7 +270,8 @@ async startTrial() {
     }
 }
 
-// ⭐⭐ NOVA FUNÇÃO: Registrar uso ⭐⭐
+
+    // ⭐⭐ ADICIONE esta função NOVA após a função startTrial:
 async registerUsage() {
     if (!this.user) return false;
     
@@ -377,8 +341,6 @@ async registerUsage() {
         return false;
     }
 }
-
-
     
           async getUserTrial() {
         if (!this.user) return null;
@@ -407,7 +369,7 @@ async registerUsage() {
     }
 
     
-          // ⭐⭐ ATUALIZE A FUNÇÃO checkTrialStatus ⭐⭐
+            // ⭐⭐ SUBSTITUA a função checkTrialStatus atual por esta:
 async checkTrialStatus() {
     try {
         const trial = await this.getUserTrial();
@@ -478,8 +440,25 @@ async checkTrialStatus() {
     }
 }
 
-
-
+   // ⭐⭐ SUBSTITUA a função updateTrialBadge atual por esta:
+async updateTrialBadge() {
+    const trialBadge = document.getElementById('trialBadge');
+    if (!trialBadge) return;
+    
+    const trialStatus = await this.checkTrialStatus();
+    
+    if (trialStatus.hasTrial) {
+        if (trialStatus.type === 'usages') {
+            trialBadge.textContent = `🎯 ${trialStatus.usagesLeft}/5`;  // ✅ MOSTRA USOS
+        } else {
+            trialBadge.textContent = `🎯 ${trialStatus.daysLeft}d`;
+        }
+        trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+    } else {
+        trialBadge.textContent = '💔 Expirado';
+        trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+    }
+}
     
     
 selectTemplate(e) {
@@ -786,7 +765,8 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-         async generateContent(e) {
+        // ⭐⭐ SUBSTITUA a função generateContent atual por esta:
+async generateContent(e) {
     e.preventDefault();
     
     // Verificar se usuário está logado
@@ -832,7 +812,6 @@ updateTemplateForm(templateType) {
     submitBtn.disabled = false;
     feather.replace();
 }
-
        // ⭐⭐ MODAL DE TRIAL EXPIRADO
     showTrialExpiredModal(trialStatus) {
         const modal = document.createElement('div');
@@ -1310,9 +1289,25 @@ sortFavorites(favorites, sortBy) {
 }
 
 
-// ✅ DEIXE APENAS ESTE:
+// ✅ FUNÇÕES GLOBAIS FORA DA CLASSE (NO FINAL DO ARQUIVO)
+
 // Initialize the application
 const copyCraft = new CopyCraftPro();
+
+// Função para verificar assinatura Hotmart
+async function checkUserSubscription() {
+    if (!copyCraft.user) return null;
+    
+    try {
+        const response = await fetch(`https://backend-copy-1e16.onrender.com/api/subscription/${copyCraft.user.email}`);
+        const subscription = await response.json();
+        
+        return subscription;
+    } catch (error) {
+        console.error('❌ Erro ao verificar assinatura:', error);
+        return null;
+    }
+}
 
 // Utility function to show/hide sections
 function showSection(sectionId) {
@@ -1341,9 +1336,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
-
-
-
+window.checkUserSubscription = checkUserSubscription;
 
 
 
