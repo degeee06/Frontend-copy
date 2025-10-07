@@ -3,46 +3,33 @@ class CopyCraftPro {
         this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
         this.currentTemplate = null;
         
-        // ⭐⭐ NOVO: Configuração do Supabase Auth
-        this.supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co'; // SUA URL DO SUPABASE
-        this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ'; // SUA CHAVE ANON DO SUPABASE
+        // Configuração do Supabase Auth
+        this.supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co';
+        this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ';
         this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseAnonKey);
         
         this.user = null;
         this.init();
     }
 
-   async init() { 
-    if (typeof feather !== 'undefined') {
-        feather.replace();
+    async init() { 
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+        
+        await this.checkAuthState();
+        this.initializeEventListeners();
+        await this.loadFavorites();
     }
-    
-    // ⭐⭐ DEBUG: Verificar se registerUsage existe
-    console.log('🔍 Verificando funções...');
-    console.log('registerUsage existe?', typeof this.registerUsage);
-    console.log('checkTrialStatus existe?', typeof this.checkTrialStatus);
-    console.log('getUserTrial existe?', typeof this.getUserTrial);
-    
-    if (typeof this.registerUsage !== 'function') {
-        console.error('❌ CRÍTICO: registerUsage NÃO EXISTE!');
-        // ⭐⭐ ADICIONE A FUNÇÃO registerUsage AQUI SE NÃO EXISTIR
-        await this.addMissingFunctions();
-    }
-    
-    await this.checkAuthState();
-    
-    this.initializeEventListeners();
-    await this.loadFavorites();
-}
 
-       async checkAuthState() {
+    async checkAuthState() {
         const { data: { user } } = await this.supabase.auth.getUser();
         if (user) {
             this.user = user;
             this.updateAuthUI();
             console.log('✅ Usuário logado:', user.email);
             
-            // ⭐⭐ INICIAR TRIAL AUTOMATICAMENTE
+            // Iniciar trial automaticamente
             try {
                 const trial = await this.startTrial();
                 if (trial) {
@@ -59,49 +46,49 @@ class CopyCraftPro {
         }
     }
 
-   async loginWithGoogle() {
-    const loginButton = document.getElementById('loginButton');
-    const originalText = loginButton.innerHTML;
-    
-    // Loading state
-    loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2"></i>Conectando...';
-    loginButton.disabled = true;
-    feather.replace();
-
-    try {
-        const { data, error } = await this.supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: 'https://frontend-copy-ten.vercel.app'
-            }
-        });
+    async loginWithGoogle() {
+        const loginButton = document.getElementById('loginButton');
+        const originalText = loginButton.innerHTML;
         
-        if (error) throw error;
-        
-    } catch (error) {
-        console.error('Erro no login:', error);
-        alert('Erro ao fazer login com Google');
-        
-        // Restore button
-        loginButton.innerHTML = originalText;
-        loginButton.disabled = false;
+        // Loading state
+        loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2"></i>Conectando...';
+        loginButton.disabled = true;
         feather.replace();
-    }
-}
-   async logout() {
-    const { error } = await this.supabase.auth.signOut();
-    if (error) {
-        console.error('Erro no logout:', error);
-    } else {
-        this.user = null;
-        this.favorites = []; // ⭐⭐ LIMPA os favoritos ao deslogar
-        this.updateAuthUI();
-        // Opcional: redirecionar para home
-        window.location.href = 'index.html';
-    }
-}
 
-        updateAuthUI() {
+        try {
+            const { data, error } = await this.supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: 'https://frontend-copy-ten.vercel.app'
+                }
+            });
+            
+            if (error) throw error;
+            
+        } catch (error) {
+            console.error('Erro no login:', error);
+            alert('Erro ao fazer login com Google');
+            
+            // Restore button
+            loginButton.innerHTML = originalText;
+            loginButton.disabled = false;
+            feather.replace();
+        }
+    }
+
+    async logout() {
+        const { error } = await this.supabase.auth.signOut();
+        if (error) {
+            console.error('Erro no logout:', error);
+        } else {
+            this.user = null;
+            this.favorites = []; // Limpa os favoritos ao deslogar
+            this.updateAuthUI();
+            window.location.href = 'index.html';
+        }
+    }
+
+    updateAuthUI() {
         const loginButton = document.getElementById('loginButton');
         if (!loginButton) return;
 
@@ -118,7 +105,7 @@ class CopyCraftPro {
             `;
             loginButton.title = `Sair (${userName})`;
             
-            // ⭐⭐ ATUALIZAR BADGE COM DIAS RESTANTES
+            // Atualizar badge com usos restantes
             this.updateTrialBadge();
         } else {
             loginButton.innerHTML = `
@@ -135,7 +122,7 @@ class CopyCraftPro {
         
         const trialStatus = await this.checkTrialStatus();
         if (trialStatus.hasTrial) {
-            trialBadge.textContent = `🎯 ${trialStatus.daysLeft}d`;
+            trialBadge.textContent = `🎯 ${trialStatus.usagesLeft}/5`;
             trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
         } else {
             trialBadge.textContent = '💔 Expirado';
@@ -143,184 +130,189 @@ class CopyCraftPro {
         }
     }
 
-    
-  initializeEventListeners() {
-    // Template generation form - DEBUG
-    const generateForm = document.getElementById('generateForm');
-    console.log('🔍 generateForm encontrado?', !!generateForm);
-    
-    if (generateForm) {
-        generateForm.addEventListener('submit', (e) => {
-            console.log('🎯 FORM SUBMIT disparado!');
-            this.generateContent(e);
-        });
-    } else {
-        console.error('❌ generateForm NÃO ENCONTRADO!');
-    }
-
-    // Tone selection
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('tone-option')) {
-            this.selectTone(e);
-        }
-    });
-
-    // Copy and favorite buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
-            this.copyToClipboard(e);
-        }
+    initializeEventListeners() {
+        // Template generation form
+        const generateForm = document.getElementById('generateForm');
+        console.log('🔍 generateForm encontrado?', !!generateForm);
         
-        if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
-            this.toggleFavorite(e);
-        }
-    });
-
-    // Template selection
-    const templateCards = document.querySelectorAll('.template-card');
-    templateCards.forEach(card => {
-        card.addEventListener('click', (e) => this.selectTemplate(e));
-    }); // ⭐⭐ FECHAR o forEach
-
-    // ⭐⭐ NOVO: Listener para o botão de login
-    const loginButton = document.getElementById('loginButton');
-    if (loginButton) {
-        loginButton.addEventListener('click', () => {
-            if (this.user) {
-                this.logout();
-            } else {
-                this.loginWithGoogle();
-            }
-        });
-    }
-} // ⭐⭐ FECHAR o método initializeEventListeners
-
-
-    // ⭐⭐ MÉTODOS SUPABASE PARA FAVORITOS
-async saveFavoritesToSupabase() {
-    if (!this.user) return;
-    
-    try {
-        const { data, error } = await this.supabase
-            .from('user_favorites')
-            .upsert({
-                user_id: this.user.id,
-                favorites: this.favorites,
-                updated_at: new Date().toISOString()
-            }, {
-                onConflict: 'user_id'
+        if (generateForm) {
+            generateForm.addEventListener('submit', (e) => {
+                console.log('🎯 FORM SUBMIT disparado!');
+                this.generateContent(e);
             });
-            
-        if (error) throw error;
-        console.log('✅ Favoritos salvos no Supabase');
-    } catch (error) {
-        console.error('❌ Erro ao salvar favoritos:', error);
-    }
-}
-
-async loadFavoritesFromSupabase() {
-    // ⭐⭐ CORREÇÃO: Sempre limpa os favoritos se não está logado
-    if (!this.user) {
-        this.favorites = []; // ⭐⭐ LIMPA os favoritos
-        return;
-    }
-    
-    try {
-        const { data, error } = await this.supabase
-            .from('user_favorites')
-            .select('favorites')
-            .eq('user_id', this.user.id)
-            .single();
-            
-        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no data
-        
-        if (data && data.favorites) {
-            this.favorites = data.favorites;
-            console.log('✅ Favoritos carregados do Supabase');
         } else {
-            this.favorites = []; // ⭐⭐ Se não tem dados, array vazio
+            console.error('❌ generateForm NÃO ENCONTRADO!');
         }
-    } catch (error) {
-        console.error('❌ Erro ao carregar favoritos:', error);
-        this.favorites = []; // ⭐⭐ Em caso de erro, array vazio
-    }
-}
 
-async startTrial() {
-    if (!this.user) return;
-    
-    try {
-        // ⭐⭐ PRIMEIRO: Tentar buscar trial existente
-        const existingTrial = await this.getUserTrial();
-        
-        if (existingTrial) {
-            console.log('✅ Trial já existe, reutilizando:', existingTrial);
-            
-            // ⭐⭐ VERIFICAR se o trial tem todas as colunas necessárias
-            if (!existingTrial.usage_count && existingTrial.usage_count !== 0) {
-                console.log('🔄 Trial antigo, atualizando para novo sistema...');
-                
-                // Atualizar trial antigo para novo sistema
-                const { error } = await this.supabase
-                    .from('user_trials')
-                    .update({
-                        usage_count: 0,
-                        max_usages: 5,
-                        usage_limit_type: 'usages',
-                        user_email: this.user.email
-                    })
-                    .eq('id', existingTrial.id);
-                
-                if (error) {
-                    console.error('❌ Erro ao atualizar trial:', error);
-                } else {
-                    console.log('✅ Trial atualizado para novo sistema');
-                }
+        // Tone selection
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tone-option')) {
+                this.selectTone(e);
+            }
+        });
+
+        // Copy and favorite buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
+                this.copyToClipboard(e);
             }
             
-            return existingTrial;
+            if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
+                this.toggleFavorite(e);
+            }
+        });
+
+        // Template selection
+        const templateCards = document.querySelectorAll('.template-card');
+        templateCards.forEach(card => {
+            card.addEventListener('click', (e) => this.selectTemplate(e));
+        });
+
+        // Listener para o botão de login
+        const loginButton = document.getElementById('loginButton');
+        if (loginButton) {
+            loginButton.addEventListener('click', () => {
+                if (this.user) {
+                    this.logout();
+                } else {
+                    this.loginWithGoogle();
+                }
+            });
+        }
+
+        // Listeners para filtros e ordenação
+        const filterType = document.getElementById('filterType');
+        const sortBy = document.getElementById('sortBy');
+        
+        if (filterType) {
+            filterType.addEventListener('change', () => this.loadFavorites());
+        }
+        if (sortBy) {
+            sortBy.addEventListener('change', () => this.loadFavorites());
+        }
+    }
+
+    // MÉTODOS SUPABASE PARA FAVORITOS
+    async saveFavoritesToSupabase() {
+        if (!this.user) return;
+        
+        try {
+            const { data, error } = await this.supabase
+                .from('user_favorites')
+                .upsert({
+                    user_id: this.user.id,
+                    favorites: this.favorites,
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'user_id'
+                });
+                
+            if (error) throw error;
+            console.log('✅ Favoritos salvos no Supabase');
+        } catch (error) {
+            console.error('❌ Erro ao salvar favoritos:', error);
+        }
+    }
+
+    async loadFavoritesFromSupabase() {
+        if (!this.user) {
+            this.favorites = [];
+            return;
         }
         
-        // ⭐⭐ SEGUNDO: Criar NOVO trial com todas as colunas
-        const { data, error } = await this.supabase
-            .from('user_trials')
-            .insert([{ 
-                user_id: this.user.id,
-                user_email: this.user.email,
-                started_at: new Date().toISOString(),
-                ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                status: 'active',
-                usage_count: 0,        // ⭐⭐ INICIAR COM 0 USOS
-                max_usages: 5,         // ⭐⭐ LIMITE DE 5 USOS  
-                usage_limit_type: 'usages' // ⭐⭐ TIPO DE LIMITE
-            }])
-            .select()
-            .single();
+        try {
+            const { data, error } = await this.supabase
+                .from('user_favorites')
+                .select('favorites')
+                .eq('user_id', this.user.id)
+                .single();
+                
+            if (error && error.code !== 'PGRST116') throw error;
             
-        if (error) throw error;
-        
-        console.log('🎉 NOVO Trial criado (sistema de usos):', data);
-        return data;
-        
-    } catch (error) {
-        console.error('❌ Erro ao iniciar trial:', error);
-        return null;
+            if (data && data.favorites) {
+                this.favorites = data.favorites;
+                console.log('✅ Favoritos carregados do Supabase');
+            } else {
+                this.favorites = [];
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar favoritos:', error);
+            this.favorites = [];
+        }
     }
-}
 
+    async startTrial() {
+        if (!this.user) return;
+        
+        try {
+            // Primeiro: Tentar buscar trial existente
+            const existingTrial = await this.getUserTrial();
+            
+            if (existingTrial) {
+                console.log('✅ Trial já existe, reutilizando:', existingTrial);
+                
+                // Verificar se o trial tem todas as colunas necessárias
+                if (!existingTrial.usage_count && existingTrial.usage_count !== 0) {
+                    console.log('🔄 Trial antigo, atualizando para novo sistema...');
+                    
+                    // Atualizar trial antigo para novo sistema
+                    const { error } = await this.supabase
+                        .from('user_trials')
+                        .update({
+                            usage_count: 0,
+                            max_usages: 5,
+                            usage_limit_type: 'usages',
+                            user_email: this.user.email
+                        })
+                        .eq('id', existingTrial.id);
+                    
+                    if (error) {
+                        console.error('❌ Erro ao atualizar trial:', error);
+                    } else {
+                        console.log('✅ Trial atualizado para novo sistema');
+                    }
+                }
+                
+                return existingTrial;
+            }
+            
+            // Segundo: Criar NOVO trial com todas as colunas
+            const { data, error } = await this.supabase
+                .from('user_trials')
+                .insert([{ 
+                    user_id: this.user.id,
+                    user_email: this.user.email,
+                    started_at: new Date().toISOString(),
+                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'active',
+                    usage_count: 0,
+                    max_usages: 5,
+                    usage_limit_type: 'usages'
+                }])
+                .select()
+                .single();
+                
+            if (error) throw error;
+            
+            console.log('🎉 NOVO Trial criado (sistema de usos):', data);
+            return data;
+            
+        } catch (error) {
+            console.error('❌ Erro ao iniciar trial:', error);
+            return null;
+        }
+    }
 
-    
-          async getUserTrial() {
+    async getUserTrial() {
         if (!this.user) return null;
         
         try {
-            // ⭐⭐ PEGAR O TRIAL MAIS RECENTE (ordem decrescente por created_at)
             const { data, error } = await this.supabase
                 .from('user_trials')
                 .select('*')
                 .eq('user_id', this.user.id)
-                .order('created_at', { ascending: false }) // ⭐⭐ MAIS RECENTE PRIMEIRO
-                .limit(1) // ⭐⭐ APENAS 1 REGISTRO
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
                 
             if (error) {
@@ -336,213 +328,195 @@ async startTrial() {
         }
     }
 
-async registerUsage() {
-    if (!this.user) return false;
-    
-    try {
-        console.log('🔄 Registrando uso...');
+    async registerUsage() {
+        if (!this.user) return false;
         
-        const trial = await this.getUserTrial();
-        
-        if (!trial || trial.status !== 'active') {
-            return false;
-        }
-        
-        const currentUsage = trial.usage_count || 0;
-        const newUsageCount = currentUsage + 1;
-        
-        console.log(`🎯 Novo uso: ${newUsageCount}/5`);
-        
-        if (newUsageCount >= 5) {
-            console.log('🚫 Limite de usos atingido');
+        try {
+            console.log('🔄 Registrando uso...');
             
-            await this.supabase
+            const trial = await this.getUserTrial();
+            
+            if (!trial || trial.status !== 'active') {
+                console.log('❌ Trial não encontrado ou inativo');
+                return false;
+            }
+            
+            const currentUsage = trial.usage_count || 0;
+            const newUsageCount = currentUsage + 1;
+            
+            console.log(`🎯 Novo uso: ${newUsageCount}/5`);
+            
+            // Verificar se atingiu o limite
+            if (newUsageCount >= 5) {
+                console.log('🚫 Limite de usos atingido');
+                
+                await this.supabase
+                    .from('user_trials')
+                    .update({
+                        usage_count: newUsageCount,
+                        status: 'expired',
+                        ended_at: new Date().toISOString()
+                    })
+                    .eq('user_id', this.user.id);
+                
+                return false;
+            }
+            
+            // Atualizar uso no Supabase
+            const { error } = await this.supabase
                 .from('user_trials')
                 .update({
-                    usage_count: newUsageCount,
-                    status: 'expired',
-                    ended_at: new Date().toISOString()
+                    usage_count: newUsageCount
                 })
                 .eq('user_id', this.user.id);
             
+            if (error) {
+                console.error('❌ Erro ao atualizar uso:', error);
+                return false;
+            }
+            
+            console.log('✅ Uso registrado no Supabase');
+            
+            // Atualizar UI
+            setTimeout(async () => {
+                await this.updateTrialBadge();
+            }, 300);
+            
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Erro inesperado:', error);
             return false;
         }
-        
-        // ⭐⭐ UPDATE no Supabase
-        const { error } = await this.supabase
-            .from('user_trials')
-            .update({
-                usage_count: newUsageCount
-            })
-            .eq('user_id', this.user.id);
-        
-        if (error) {
-            console.error('❌ Erro ao atualizar uso:', error);
-            return true;
-        }
-        
-        console.log('✅ Uso registrado no Supabase');
-        
-        // ⭐⭐ ATUALIZAR UI IMEDIATAMENTE
-        setTimeout(async () => {
-            await this.updateTrialBadge();
-        }, 300);
-        
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Erro inesperado:', error);
-        return true;
     }
-}
-    
-    
-        async checkTrialStatus() {
-    try {
-        const trial = await this.getUserTrial();
-        
-        if (!trial) {
-            console.log('❌ Nenhum trial encontrado');
+
+    async checkTrialStatus() {
+        try {
+            const trial = await this.getUserTrial();
+            
+            if (!trial) {
+                console.log('❌ Nenhum trial encontrado');
+                return { 
+                    hasTrial: false, 
+                    message: 'Sem trial ativo',
+                    usagesLeft: 0,
+                    totalUsages: 5
+                };
+            }
+            
+            console.log('🔍 Trial encontrado para verificação:', {
+                id: trial.id,
+                status: trial.status,
+                usage_count: trial.usage_count,
+                max_usages: trial.max_usages
+            });
+            
+            if (trial.status !== 'active') {
+                console.log('❌ Trial não está ativo:', trial.status);
+                return { 
+                    hasTrial: false, 
+                    message: 'Trial expirado',
+                    usagesLeft: 0,
+                    totalUsages: 5
+                };
+            }
+            
+            // Sistema de usos - Verificar se tem usos disponíveis
+            const currentUsage = trial.usage_count || 0;
+            const maxUsages = trial.max_usages || 5;
+            const usagesLeft = maxUsages - currentUsage;
+            
+            console.log(`📊 Status usos: ${currentUsage}/${maxUsages} | Restantes: ${usagesLeft}`);
+            
+            if (usagesLeft <= 0) {
+                console.log('🚫 Sem usos disponíveis');
+                return { 
+                    hasTrial: false, 
+                    message: 'Usos esgotados',
+                    usagesLeft: 0,
+                    totalUsages: maxUsages
+                };
+            }
+            
+            console.log('✅ Trial ativo com usos disponíveis');
+            return {
+                hasTrial: true,
+                message: `${usagesLeft} usos restantes`,
+                usagesLeft: usagesLeft,
+                totalUsages: maxUsages,
+                usageCount: currentUsage,
+                type: 'usages'
+            };
+            
+        } catch (error) {
+            console.error('❌ Erro ao verificar status do trial:', error);
             return { 
                 hasTrial: false, 
-                message: 'Sem trial ativo',
+                message: 'Erro ao verificar trial',
                 usagesLeft: 0,
                 totalUsages: 5
             };
         }
+    }
+
+    selectTemplate(e) {
+        const card = e.currentTarget;
+        const templateType = card.dataset.template;
         
-        console.log('🔍 Trial encontrado para verificação:', {
-            id: trial.id,
-            status: trial.status,
-            usage_count: trial.usage_count,
-            max_usages: trial.max_usages,
-            usage_limit_type: trial.usage_limit_type
+        document.querySelectorAll('.template-card').forEach(c => {
+            c.classList.remove('border-purple-500', 'border-2', 'bg-purple-50');
         });
         
-        if (trial.status !== 'active') {
-            console.log('❌ Trial não está ativo:', trial.status);
-            return { 
-                hasTrial: false, 
-                message: 'Trial expirado',
-                usagesLeft: 0,
-                totalUsages: 5
-            };
+        card.classList.add('border-purple-500', 'border-2', 'bg-purple-50');
+        this.currentTemplate = templateType;
+        this.updateTemplateForm(templateType);
+        
+        // Mostrar o formulário
+        const formSection = document.getElementById('templateFormSection');
+        const formTitle = document.getElementById('templateFormTitle');
+        
+        if (formSection) {
+            formSection.style.display = 'block';
+            
+            // Atualizar o título do formulário
+            if (formTitle) {
+                const templateNames = {
+                    instagram: 'Legendas para Instagram',
+                    facebook: 'Anúncios para Facebook', 
+                    ecommerce: 'Descrições de Produto',
+                    email: 'E-mails de Marketing',
+                    google: 'Anúncios para Google',
+                    blog: 'Títulos para Blog'
+                };
+                formTitle.textContent = `Configurar ${templateNames[templateType]}`;
+            }
+            
+            // Scroll suave para o formulário
+            setTimeout(() => {
+                formSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 100);
         }
-        
-        // ⭐⭐ SISTEMA DE USOS - Verificar se tem usos disponíveis
-        const currentUsage = trial.usage_count || 0;
-        const maxUsages = trial.max_usages || 5;
-        const usagesLeft = maxUsages - currentUsage;
-        
-        console.log(`📊 Status usos: ${currentUsage}/${maxUsages} | Restantes: ${usagesLeft}`);
-        
-        if (usagesLeft <= 0) {
-            console.log('🚫 Sem usos disponíveis');
-            return { 
-                hasTrial: false, 
-                message: 'Usos esgotados',
-                usagesLeft: 0,
-                totalUsages: maxUsages
-            };
-        }
-        
-        console.log('✅ Trial ativo com usos disponíveis');
-        return {
-            hasTrial: true,
-            message: `${usagesLeft} usos restantes`,
-            usagesLeft: usagesLeft,
-            totalUsages: maxUsages,
-            usageCount: currentUsage,
-            type: 'usages'
+    }
+
+    updateTemplateForm(templateType) {
+        const formContainer = document.getElementById('templateFormContainer');
+        if (!formContainer) return;
+
+        const forms = {
+            instagram: this.getInstagramForm(),
+            facebook: this.getFacebookForm(),
+            ecommerce: this.getEcommerceForm(),
+            email: this.getEmailForm(),
+            google: this.getGoogleForm(),
+            blog: this.getBlogForm()
         };
-        
-    } catch (error) {
-        console.error('❌ Erro ao verificar status do trial:', error);
-        return { 
-            hasTrial: false, 
-            message: 'Erro ao verificar trial',
-            usagesLeft: 0,
-            totalUsages: 5
-        };
+
+        formContainer.innerHTML = forms[templateType] || forms.instagram;
+        feather.replace();
     }
-}
-    
-
-  // ⭐⭐ SUBSTITUA a função updateTrialBadge por esta:
-async updateTrialBadge() {
-    const trialBadge = document.getElementById('trialBadge');
-    if (!trialBadge) return;
-    
-    const trialStatus = await this.checkTrialStatus();
-    
-    if (trialStatus.hasTrial) {
-        trialBadge.textContent = `🎯 ${trialStatus.usagesLeft}/5`; // ⭐⭐ MOSTRA USOS
-        trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-    } else {
-        trialBadge.textContent = '💔 Expirado';
-        trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-    }
-}
-    
-    
-selectTemplate(e) {
-    const card = e.currentTarget;
-    const templateType = card.dataset.template;
-    
-    document.querySelectorAll('.template-card').forEach(c => {
-        c.classList.remove('border-purple-500', 'border-2', 'bg-purple-50');
-    });
-    
-    card.classList.add('border-purple-500', 'border-2', 'bg-purple-50');
-    this.currentTemplate = templateType;
-    this.updateTemplateForm(templateType);
-    
-    // ⭐⭐ CORREÇÃO: MOSTRAR O FORMULÁRIO ⭐⭐
-    const formSection = document.getElementById('templateFormSection');
-    const formTitle = document.getElementById('templateFormTitle');
-    
-    if (formSection) {
-        formSection.style.display = 'block';
-        
-        // Atualizar o título do formulário
-        if (formTitle) {
-            const templateNames = {
-                instagram: 'Legendas para Instagram',
-                facebook: 'Anúncios para Facebook', 
-                ecommerce: 'Descrições de Produto',
-                email: 'E-mails de Marketing',
-                google: 'Anúncios para Google',
-                blog: 'Títulos para Blog'
-            };
-            formTitle.textContent = `Configurar ${templateNames[templateType]}`;
-        }
-        
-        // Scroll suave para o formulário
-        setTimeout(() => {
-            formSection.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
-        }, 100);
-    }
-}
-
-updateTemplateForm(templateType) {
-    const formContainer = document.getElementById('templateFormContainer');
-    if (!formContainer) return;
-
-    const forms = {
-        instagram: this.getInstagramForm(),
-        facebook: this.getFacebookForm(),
-        ecommerce: this.getEcommerceForm(),
-        email: this.getEmailForm(),
-        google: this.getGoogleForm(),
-        blog: this.getBlogForm()
-    };
-
-    formContainer.innerHTML = forms[templateType] || forms.instagram;
-    feather.replace();
-}
 
     getInstagramForm() {
         return `
@@ -789,54 +763,52 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-    
-   async generateContent(e) {
-    e.preventDefault();
-    
-    if (!this.user) {
-        alert('⚠️ Faça login para gerar conteúdos!');
-        this.loginWithGoogle();
-        return;
-    }
-    
-    // ⭐⭐ CORREÇÃO: PRIMEIRO registrar o uso
-    const canUse = await this.registerUsage();
-    if (!canUse) {
-        this.showTrialExpiredModal();
-        return;
-    }
-    
-    // Resto do código permanece igual...
-    if (!this.currentTemplate) {
-        alert('Por favor, selecione um template primeiro.');
-        return;
+    async generateContent(e) {
+        e.preventDefault();
+        
+        if (!this.user) {
+            alert('⚠️ Faça login para gerar conteúdos!');
+            this.loginWithGoogle();
+            return;
+        }
+        
+        // PRIMEIRO registrar o uso
+        const canUse = await this.registerUsage();
+        if (!canUse) {
+            this.showTrialExpiredModal();
+            return;
+        }
+        
+        if (!this.currentTemplate) {
+            alert('Por favor, selecione um template primeiro.');
+            return;
+        }
+
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin inline w-4 h-4 mr-2"></i>Gerando com IA...';
+        submitBtn.disabled = true;
+        feather.replace();
+
+        try {
+            const content = await this.callDeepSeekAPI();
+            this.displayGeneratedContent(content);
+        } catch (error) {
+            console.error('Error generating content:', error);
+            alert('Erro ao gerar conteúdo. Verifique sua API Key e tente novamente.');
+            const sampleContent = this.generateSampleContent();
+            this.displayGeneratedContent(sampleContent);
+        }
+
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        feather.replace();
     }
 
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin inline w-4 h-4 mr-2"></i>Gerando com IA...';
-    submitBtn.disabled = true;
-    feather.replace();
-
-    try {
-        const content = await this.callDeepSeekAPI();
-        this.displayGeneratedContent(content);
-    } catch (error) {
-        console.error('Error generating content:', error);
-        alert('Erro ao gerar conteúdo. Verifique sua API Key e tente novamente.');
-        const sampleContent = this.generateSampleContent();
-        this.displayGeneratedContent(sampleContent);
-    }
-
-    submitBtn.innerHTML = originalText;
-    submitBtn.disabled = false;
-    feather.replace();
-}
-
-       // ⭐⭐ MODAL DE TRIAL EXPIRADO
-    showTrialExpiredModal(trialStatus) {
+    // MODAL DE TRIAL EXPIRADO
+    showTrialExpiredModal() {
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
         modal.innerHTML = `
@@ -844,10 +816,10 @@ updateTemplateForm(templateType) {
                 <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i data-feather="clock" class="text-yellow-600 w-8 h-8"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-4">Trial Expirado</h3>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Usos Esgotados</h3>
                 <p class="text-gray-600 mb-6">
-                    Seu período de teste de 7 dias acabou. 
-                    Assine agora para continuar gerando conteúdos incríveis!
+                    Você utilizou todos os 5 usos do seu trial gratuito.
+                    Faça upgrade para continuar gerando conteúdos incríveis!
                 </p>
                 <div class="space-y-3">
                     <button onclick="copyCraft.upgradeToPro()" 
@@ -865,108 +837,42 @@ updateTemplateForm(templateType) {
         feather.replace();
     }
 
-   // ⭐⭐ MÉTODO PARA UPGRADE (placeholder)
+    // MÉTODO PARA UPGRADE (placeholder)
     upgradeToPro() {
-        // Aqui você integraria com um gateway de pagamento
         alert('Redirecionando para página de assinatura...');
         // Ex: window.location.href = '/checkout.html';
     }
 
-        // ⭐⭐ MÉTODO PARA MOSTRAR OPÇÕES DE UPGRADE
-     async showUpgradeOptions() { 
-        const trialStatus = this.user ? await this.checkTrialStatus() : null;
-        const hasActiveTrial = trialStatus?.hasTrial;
-        const daysLeft = trialStatus?.daysLeft || 0;
+    async callDeepSeekAPI() {
+        const contentInput = document.getElementById('contentInput');
+        const styleSelect = document.getElementById('styleSelect');
+        const toneSelector = document.getElementById('toneSelector');
+        
+        const userInput = contentInput ? contentInput.value : '';
+        const style = styleSelect ? styleSelect.value : 'engajamento';
+        const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
+        const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
 
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        modal.innerHTML = `
-            <div class="bg-white p-8 rounded-2xl max-w-md w-full mx-4 text-center">
-                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-feather="star" class="text-purple-600 w-8 h-8"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                    ${hasActiveTrial ? 'Faça Upgrade para Pro' : 'Junte-se ao Coupiator Pro'}
-                </h3>
-                <p class="text-gray-600 mb-4">
-                    ${hasActiveTrial 
-                        ? `Você tem ${daysLeft} dias restantes no trial. Faça upgrade agora para garantir acesso ilimitado!`
-                        : 'Crie uma conta e comece seu trial gratuito de 7 dias!'}
-                </p>
-                
-                ${hasActiveTrial ? `
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-left">
-                        <div class="flex items-center">
-                            <i data-feather="clock" class="text-yellow-600 w-4 h-4 mr-2"></i>
-                            <span class="text-yellow-800 font-medium">${daysLeft} dias restantes no trial</span>
-                        </div>
-                    </div>
-                ` : ''}
-                
-                <div class="space-y-3">
-                    <button onclick="copyCraft.upgradeToPro()" 
-                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
-                        🚀 ${hasActiveTrial ? 'Fazer Upgrade Agora' : 'Começar Trial Gratuito'}
-                    </button>
-                    
-                    ${hasActiveTrial ? `
-                        <button onclick="this.closest('.fixed').remove()" 
-                                class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
-                            Continuar no Trial
-                        </button>
-                    ` : `
-                        <button onclick="this.closest('.fixed').remove()" 
-                                class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
-                            Talvez depois
-                        </button>
-                    `}
-                </div>
-                
-                <div class="mt-6 pt-4 border-t border-gray-200">
-                    <p class="text-sm text-gray-500">
-                        ✅ Geração ilimitada de conteúdo<br>
-                        ✅ Todos os templates<br>
-                        ✅ Suporte prioritário
-                    </p>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        feather.replace();
+        const prompt = this.buildPrompt(userInput, style, tone);
+
+        const response = await fetch('https://backend-copy-1e16.onrender.com/api/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                prompt: prompt,
+                template: this.currentTemplate
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Backend Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.content;
     }
-    
-    
-   async callDeepSeekAPI() {
-    const contentInput = document.getElementById('contentInput');
-    const styleSelect = document.getElementById('styleSelect');
-    const toneSelector = document.getElementById('toneSelector');
-    
-    const userInput = contentInput ? contentInput.value : '';
-    const style = styleSelect ? styleSelect.value : 'engajamento';
-    const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
-    const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
-
-    const prompt = this.buildPrompt(userInput, style, tone);
-
-    // ⭐⭐ MUDANÇA AQUI: Chama SEU backend em vez da API diretamente ⭐⭐
-    const response = await fetch('https://backend-copy-1e16.onrender.com/api/generate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            prompt: prompt,
-            template: this.currentTemplate
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`Backend Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.content;
-}
 
     buildPrompt(userInput, style, tone) {
         const templatePrompts = {
@@ -1099,163 +1005,156 @@ Formato desejado:
         });
     }
 
-   async toggleFavorite(e) { // ⭐⭐ Adicionar async
-    const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
-    const content = button.dataset.content;
-    const type = button.dataset.type;
-    
-    // Verificar se usuário está logado
-    if (!this.user) {
-        alert('⚠️ Faça login para salvar favoritos!');
-        this.loginWithGoogle();
-        return;
+    async toggleFavorite(e) {
+        const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
+        const content = button.dataset.content;
+        const type = button.dataset.type;
+        
+        // Verificar se usuário está logado
+        if (!this.user) {
+            alert('⚠️ Faça login para salvar favoritos!');
+            this.loginWithGoogle();
+            return;
+        }
+        
+        const favorite = {
+            id: Date.now(),
+            type: type,
+            content: content,
+            date: new Date().toLocaleDateString('pt-BR'),
+            title: this.generateFavoriteTitle(content),
+            user_id: this.user.id
+        };
+        
+        this.favorites.push(favorite);
+        
+        await this.saveFavorites();
+        this.loadFavorites();
+        
+        // Visual feedback
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i data-feather="heart" class="w-4 h-4 mr-2 fill-current"></i>Salvo!';
+        button.classList.remove('border-purple-600', 'text-purple-600');
+        button.classList.add('bg-green-500', 'border-green-500', 'text-white');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('bg-green-500', 'border-green-500', 'text-white');
+            button.classList.add('border-purple-600', 'text-purple-600');
+            feather.replace();
+        }, 2000);
     }
-    
-    const favorite = {
-        id: Date.now(),
-        type: type,
-        content: content,
-        date: new Date().toLocaleDateString('pt-BR'),
-        title: this.generateFavoriteTitle(content),
-        user_id: this.user.id
-    };
-    
-    this.favorites.push(favorite);
-    
-    // ⭐⭐ CORREÇÃO: Aguardar o saveFavorites terminar
-    await this.saveFavorites(); // ⭐⭐ Adicionar await
-    
-    // ⭐⭐ CORREÇÃO: Atualizar a visualização APÓS salvar
-    this.loadFavorites();
-    
-    // Visual feedback
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i data-feather="heart" class="w-4 h-4 mr-2 fill-current"></i>Salvo!';
-    button.classList.remove('border-purple-600', 'text-purple-600');
-    button.classList.add('bg-green-500', 'border-green-500', 'text-white');
-    
-    setTimeout(() => {
-        button.innerHTML = originalText;
-        button.classList.remove('bg-green-500', 'border-green-500', 'text-white');
-        button.classList.add('border-purple-600', 'text-purple-600');
-        feather.replace();
-    }, 2000);
-}
 
     generateFavoriteTitle(content) {
         const firstLine = content.split('\n')[0];
         return firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
     }
 
-   async saveFavorites() { // ⭐⭐ Adicionar async
-    // ⭐⭐ CORREÇÃO: Só salva no Supabase se estiver logado e AGUARDA
-    if (this.user) {
-        await this.saveFavoritesToSupabase(); // ⭐⭐ Adicionar await
-    }
-}
-
-    
-// ⭐⭐ MÉTODO NOVO: Ordenar favoritos
-sortFavorites(favorites, sortBy) {
-    const sortedFavorites = [...favorites]; // Cria uma cópia
-    
-    switch (sortBy) {
-        case 'newest':
-            return sortedFavorites.sort((a, b) => b.id - a.id); // Mais recentes primeiro
-        case 'oldest':
-            return sortedFavorites.sort((a, b) => a.id - b.id); // Mais antigos primeiro
-        case 'name':
-            return sortedFavorites.sort((a, b) => a.title.localeCompare(b.title)); // Ordem alfabética
-        default:
-            return sortedFavorites;
-    }
-}
-
-    
-    
- async loadFavorites() {
-    console.log('🔄 Carregando favoritos...', 'Usuário:', this.user ? this.user.email : 'Não logado');
-    
-    await this.loadFavoritesFromSupabase();
-    
-    const favoritesGrid = document.getElementById('favoritesGrid');
-    if (!favoritesGrid) return;
-
-    // ⭐⭐ CORREÇÃO: Obter filtro e ordenação selecionados
-    const filterType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
-    const sortBy = document.getElementById('sortBy') ? document.getElementById('sortBy').value : 'newest';
-    
-    console.log('📊 Filtro:', filterType, 'Ordenação:', sortBy);
-
-    // ⭐⭐ CORREÇÃO: Filtrar favoritos pelo tipo selecionado
-    let filteredFavorites = this.favorites;
-    
-    if (filterType !== 'all') {
-        filteredFavorites = this.favorites.filter(fav => fav.type === filterType);
-    }
-    
-    console.log('📊 Favoritos após filtro:', filteredFavorites.length);
-
-    // ⭐⭐ CORREÇÃO: Ordenar favoritos
-    filteredFavorites = this.sortFavorites(filteredFavorites, sortBy);
-
-    if (filteredFavorites.length === 0) {
-        favoritesGrid.innerHTML = `
-            <div class="col-span-3 text-center py-12">
-                <i data-feather="heart" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-                <h3 class="text-xl font-bold text-gray-500 mb-2">
-                    ${filterType === 'all' ? 'Nenhum favorito ainda' : `Nenhum favorito do tipo ${this.getTypeLabel(filterType)}`}
-                </h3>
-                <p class="text-gray-400">
-                    ${filterType === 'all' 
-                        ? 'Gere alguns conteúdos e adicione-os aos favoritos!' 
-                        : `Gere conteúdos do tipo ${this.getTypeLabel(filterType)} e adicione-os aos favoritos!`}
-                </p>
-            </div>
-        `;
-        feather.replace();
-        return;
+    async saveFavorites() {
+        if (this.user) {
+            await this.saveFavoritesToSupabase();
+        }
     }
 
-    // ⭐⭐ CORREÇÃO: Usar filteredFavorites em vez de this.favorites
-    favoritesGrid.innerHTML = filteredFavorites.map(fav => `
-        <div class="copy-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition duration-300">
-            <div class="flex justify-between items-start mb-4">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 ${this.getTypeColor(fav.type)} rounded-full flex items-center justify-center mr-3">
-                        <i data-feather="${this.getTypeIcon(fav.type)}" class="${this.getTypeIconColor(fav.type)} w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold">${this.getTypeLabel(fav.type)}</h3>
-                        <p class="text-sm text-gray-500">${fav.date}</p>
-                    </div>
+    // MÉTODO: Ordenar favoritos
+    sortFavorites(favorites, sortBy) {
+        const sortedFavorites = [...favorites];
+        
+        switch (sortBy) {
+            case 'newest':
+                return sortedFavorites.sort((a, b) => b.id - a.id);
+            case 'oldest':
+                return sortedFavorites.sort((a, b) => a.id - b.id);
+            case 'name':
+                return sortedFavorites.sort((a, b) => a.title.localeCompare(b.title));
+            default:
+                return sortedFavorites;
+        }
+    }
+
+    async loadFavorites() {
+        console.log('🔄 Carregando favoritos...', 'Usuário:', this.user ? this.user.email : 'Não logado');
+        
+        await this.loadFavoritesFromSupabase();
+        
+        const favoritesGrid = document.getElementById('favoritesGrid');
+        if (!favoritesGrid) return;
+
+        // Obter filtro e ordenação selecionados
+        const filterType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
+        const sortBy = document.getElementById('sortBy') ? document.getElementById('sortBy').value : 'newest';
+        
+        console.log('📊 Filtro:', filterType, 'Ordenação:', sortBy);
+
+        // Filtrar favoritos pelo tipo selecionado
+        let filteredFavorites = this.favorites;
+        
+        if (filterType !== 'all') {
+            filteredFavorites = this.favorites.filter(fav => fav.type === filterType);
+        }
+        
+        console.log('📊 Favoritos após filtro:', filteredFavorites.length);
+
+        // Ordenar favoritos
+        filteredFavorites = this.sortFavorites(filteredFavorites, sortBy);
+
+        if (filteredFavorites.length === 0) {
+            favoritesGrid.innerHTML = `
+                <div class="col-span-3 text-center py-12">
+                    <i data-feather="heart" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-500 mb-2">
+                        ${filterType === 'all' ? 'Nenhum favorito ainda' : `Nenhum favorito do tipo ${this.getTypeLabel(filterType)}`}
+                    </h3>
+                    <p class="text-gray-400">
+                        ${filterType === 'all' 
+                            ? 'Gere alguns conteúdos e adicione-os aos favoritos!' 
+                            : `Gere conteúdos do tipo ${this.getTypeLabel(filterType)} e adicione-os aos favoritos!`}
+                    </p>
                 </div>
-                <button class="text-gray-400 hover:text-red-500 delete-favorite" data-id="${fav.id}">
-                    <i data-feather="trash-2" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="bg-gray-50 p-4 rounded-lg mb-4 max-h-32 overflow-y-auto">
-                <p class="text-gray-700 whitespace-pre-line">${fav.content}</p>
-            </div>
-            <div class="flex justify-between items-center text-sm">
-                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${fav.type}</span>
-                <button class="btn-copy text-purple-600 hover:text-purple-800 font-medium" data-content="${fav.content.replace(/"/g, '&quot;')}">
-                    Copiar
-                </button>
-            </div>
-        </div>
-    `).join('');
+            `;
+            feather.replace();
+            return;
+        }
 
-    feather.replace();
+        favoritesGrid.innerHTML = filteredFavorites.map(fav => `
+            <div class="copy-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition duration-300">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 ${this.getTypeColor(fav.type)} rounded-full flex items-center justify-center mr-3">
+                            <i data-feather="${this.getTypeIcon(fav.type)}" class="${this.getTypeIconColor(fav.type)} w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">${this.getTypeLabel(fav.type)}</h3>
+                            <p class="text-sm text-gray-500">${fav.date}</p>
+                        </div>
+                    </div>
+                    <button class="text-gray-400 hover:text-red-500 delete-favorite" data-id="${fav.id}">
+                        <i data-feather="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4 max-h-32 overflow-y-auto">
+                    <p class="text-gray-700 whitespace-pre-line">${fav.content}</p>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${fav.type}</span>
+                    <button class="btn-copy text-purple-600 hover:text-purple-800 font-medium" data-content="${fav.content.replace(/"/g, '&quot;')}">
+                        Copiar
+                    </button>
+                </div>
+            </div>
+        `).join('');
 
-    // Add event listeners for delete buttons
-    document.querySelectorAll('.delete-favorite').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = parseInt(e.currentTarget.dataset.id);
-            this.deleteFavorite(id);
+        feather.replace();
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-favorite').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(e.currentTarget.dataset.id);
+                this.deleteFavorite(id);
+            });
         });
-    });
-}
+    }
+
     deleteFavorite(id) {
         this.favorites = this.favorites.filter(fav => fav.id !== id);
         this.saveFavorites();
@@ -1311,8 +1210,6 @@ sortFavorites(favorites, sortBy) {
     }
 }
 
-
-// ✅ DEIXE APENAS ESTE:
 // Initialize the application
 const copyCraft = new CopyCraftPro();
 
@@ -1343,38 +1240,3 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
