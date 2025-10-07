@@ -242,66 +242,91 @@ class CopyCraftPro {
     }
 
     async startTrial() {
-        if (!this.user) return;
+    if (!this.user) return;
+    
+    try {
+        // Primeiro: Tentar buscar trial existente
+        const existingTrial = await this.getUserTrial();
         
-        try {
-            // Primeiro: Tentar buscar trial existente
-            const existingTrial = await this.getUserTrial();
+        if (existingTrial) {
+            console.log('✅ Trial já existe, reutilizando:', existingTrial);
             
-            if (existingTrial) {
-                console.log('✅ Trial já existe, reutilizando:', existingTrial);
+            // ⭐⭐ CORREÇÃO CRÍTICA: Se o trial tem usage_count >= 5, criar um novo
+            if (existingTrial.usage_count >= 5) {
+                console.log('🔄 Trial com usos esgotados, criando novo...');
                 
-                // Verificar se o trial tem todas as colunas necessárias
-                if (!existingTrial.usage_count && existingTrial.usage_count !== 0) {
-                    console.log('🔄 Trial antigo, atualizando para novo sistema...');
-                    
-                    // Atualizar trial antigo para novo sistema
-                    const { error } = await this.supabase
-                        .from('user_trials')
-                        .update({
-                            usage_count: 0,
-                            max_usages: 5,
-                            usage_limit_type: 'usages',
-                            user_email: this.user.email
-                        })
-                        .eq('id', existingTrial.id);
-                    
-                    if (error) {
-                        console.error('❌ Erro ao atualizar trial:', error);
-                    } else {
-                        console.log('✅ Trial atualizado para novo sistema');
-                    }
-                }
+                // Marcar o antigo como expirado
+                await this.supabase
+                    .from('user_trials')
+                    .update({
+                        status: 'expired',
+                        ended_at: new Date().toISOString()
+                    })
+                    .eq('id', existingTrial.id);
                 
-                return existingTrial;
+                // Criar NOVO trial
+                return await this.createNewTrial();
             }
             
-            // Segundo: Criar NOVO trial com todas as colunas
-            const { data, error } = await this.supabase
-                .from('user_trials')
-                .insert([{ 
-                    user_id: this.user.id,
-                    user_email: this.user.email,
-                    started_at: new Date().toISOString(),
-                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    status: 'active',
-                    usage_count: 0,
-                    max_usages: 5,
-                    usage_limit_type: 'usages'
-                }])
-                .select()
-                .single();
+            // Verificar se o trial tem todas as colunas necessárias
+            if (!existingTrial.usage_count && existingTrial.usage_count !== 0) {
+                console.log('🔄 Trial antigo, atualizando para novo sistema...');
                 
-            if (error) throw error;
+                // Atualizar trial antigo para novo sistema
+                const { error } = await this.supabase
+                    .from('user_trials')
+                    .update({
+                        usage_count: 0, // ⭐⭐ GARANTIR que começa com 0
+                        max_usages: 5,
+                        usage_limit_type: 'usages',
+                        user_email: this.user.email
+                    })
+                    .eq('id', existingTrial.id);
+                
+                if (error) {
+                    console.error('❌ Erro ao atualizar trial:', error);
+                } else {
+                    console.log('✅ Trial atualizado para novo sistema');
+                }
+            }
             
-            console.log('🎉 NOVO Trial criado (sistema de usos):', data);
-            return data;
-            
-        } catch (error) {
-            console.error('❌ Erro ao iniciar trial:', error);
-            return null;
+            return existingTrial;
         }
+        
+        // Criar NOVO trial
+        return await this.createNewTrial();
+        
+    } catch (error) {
+        console.error('❌ Erro ao iniciar trial:', error);
+        return null;
     }
+}
+
+// ⭐⭐ NOVO MÉTODO: Criar trial do zero
+async createNewTrial() {
+    const { data, error } = await this.supabase
+        .from('user_trials')
+        .insert([{ 
+            user_id: this.user.id,
+            user_email: this.user.email,
+            started_at: new Date().toISOString(),
+            ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'active',
+            usage_count: 0,        // ⭐⭐ GARANTIDO: 0 usos
+            max_usages: 5,         // ⭐⭐ LIMITE: 5 usos  
+            usage_limit_type: 'usages'
+        }])
+        .select()
+        .single();
+        
+    if (error) {
+        console.error('❌ Erro ao criar novo trial:', error);
+        return null;
+    }
+    
+    console.log('🎉 NOVO Trial criado com 0 usos:', data);
+    return data;
+}
 
    async getUserTrial() {
     if (!this.user) return null;
@@ -332,7 +357,7 @@ class CopyCraftPro {
     }
 }
 
-   async registerUsage() {
+  async registerUsage() {
     if (!this.user) return false;
     
     try {
@@ -415,7 +440,6 @@ class CopyCraftPro {
         return false;
     }
 }
-
     
 
     async checkTrialStatus() {
@@ -1268,4 +1292,5 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
