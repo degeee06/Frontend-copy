@@ -277,6 +277,7 @@ async startTrial() {
     }
 }
 
+
     
           async getUserTrial() {
         if (!this.user) return null;
@@ -304,8 +305,75 @@ async startTrial() {
         }
     }
 
+// ⭐⭐ ADICIONE APENAS ESTA FUNÇÃO NOVA (após getUserTrial):
+async registerUsage() {
+    if (!this.user) return false;
     
-       // ⭐⭐ SUBSTITUA a função checkTrialStatus por esta:
+    try {
+        console.log('🔄 Registrando uso...');
+        
+        const trial = await this.getUserTrial();
+        
+        if (!trial || trial.status !== 'active') {
+            console.log('❌ Trial não encontrado ou inativo');
+            return false;
+        }
+        
+        console.log('📊 Trial antes do uso:', trial);
+        
+        // ⭐⭐ SISTEMA SIMPLES: usar ends_at como contador
+        const currentUsage = trial.usage_count || 0;
+        const newUsageCount = currentUsage + 1;
+        
+        console.log(`🎯 Novo uso: ${newUsageCount}/5`);
+        
+        // Verificar se atingiu o limite
+        if (newUsageCount >= 5) {
+            console.log('🚫 Limite de 5 usos atingido');
+            
+            // Marcar como expirado
+            const { error } = await this.supabase
+                .from('user_trials')
+                .update({
+                    usage_count: newUsageCount,
+                    status: 'expired',
+                    ended_at: new Date().toISOString()
+                })
+                .eq('user_id', this.user.id);
+            
+            if (error) {
+                console.error('❌ Erro ao expirar trial:', error);
+                return false;
+            }
+            
+            return false;
+        }
+        
+        // ⭐⭐ Atualizar contador
+        const { error } = await this.supabase
+            .from('user_trials')
+            .update({
+                usage_count: newUsageCount
+            })
+            .eq('user_id', this.user.id);
+        
+        if (error) {
+            console.error('❌ Erro ao atualizar uso:', error);
+            return true; // ⭐⭐ Permite usar mesmo com erro
+        }
+        
+        console.log('✅ Uso registrado com sucesso');
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Erro inesperado ao registrar uso:', error);
+        return true; // ⭐⭐ Permite usar mesmo com erro
+    }
+}
+
+
+    
+           // ⭐⭐ SUBSTITUA a função checkTrialStatus por esta:
 async checkTrialStatus() {
     try {
         const trial = await this.getUserTrial();
@@ -384,45 +452,9 @@ async checkTrialStatus() {
         };
     }
 }
-        
-        // ⭐⭐ FALLBACK: Se for sistema antigo (dias), verificar também
-        if (trial.usage_limit_type === 'days' && trial.ends_at) {
-            const now = new Date();
-            const endsAt = new Date(trial.ends_at);
-            
-            if (now > endsAt) {
-                console.log('❌ Trial expirado por data');
-                return { 
-                    hasTrial: false, 
-                    message: 'Trial expirado',
-                    usagesLeft: 0,
-                    totalUsages: maxUsages
-                };
-            }
-        }
-        
-        console.log('✅ Trial ativo com usos disponíveis');
-        return {
-            hasTrial: true,
-            message: `${usagesLeft} usos restantes`,
-            usagesLeft: usagesLeft,
-            totalUsages: maxUsages,
-            usageCount: currentUsage,
-            type: 'usages'
-        };
-        
-    } catch (error) {
-        console.error('❌ Erro ao verificar status do trial:', error);
-        return { 
-            hasTrial: false, 
-            message: 'Erro ao verificar trial',
-            usagesLeft: 0,
-            totalUsages: 5
-        };
-    }
-}
     
-   // ⭐⭐ SUBSTITUA a função updateTrialBadge por esta:
+
+  // ⭐⭐ SUBSTITUA a função updateTrialBadge por esta:
 async updateTrialBadge() {
     const trialBadge = document.getElementById('trialBadge');
     if (!trialBadge) return;
@@ -437,7 +469,6 @@ async updateTrialBadge() {
         trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     }
 }
-
     
     
 selectTemplate(e) {
@@ -744,7 +775,7 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-     // ⭐⭐ SUBSTITUA a função generateContent por esta:
+         // ⭐⭐ SUBSTITUA a função generateContent por esta:
 async generateContent(e) {
     e.preventDefault();
     
