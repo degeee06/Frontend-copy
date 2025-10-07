@@ -241,37 +241,48 @@ class CopyCraftPro {
         }
     }
 
-   async startTrial() {
+  async startTrial() {
     if (!this.user) return;
     
     try {
-        // Primeiro: Tentar buscar trial existente ATIVO
+        // Buscar trial existente
         const existingTrial = await this.getUserTrial();
         
-        if (existingTrial && existingTrial.status === 'active') {
-            console.log('✅ Trial ativo já existe:', existingTrial);
+        if (existingTrial) {
+            console.log('✅ Trial já existe:', existingTrial);
             
-            // Se o trial ativo tem usos esgotados, expirar ele
-            if (existingTrial.usage_count >= 5) {
-                console.log('🔄 Trial ativo com usos esgotados, expirando...');
-                
-                await this.supabase
-                    .from('user_trials')
-                    .update({
-                        status: 'expired',
-                        ended_at: new Date().toISOString()
-                    })
-                    .eq('id', existingTrial.id);
-                    
-                // Criar NOVO trial
-                return await this.createNewTrial();
+            // ⭐⭐ CORREÇÃO: NÃO resetar os usos se o trial já existe!
+            // Apenas garantir que está ativo se ainda tem usos
+            if (existingTrial.status === 'active') {
+                console.log('🔄 Trial ativo mantido com usos atuais');
+                return existingTrial;
             }
             
+            // Se o trial está expirado mas tem menos de 5 usos, reativar
+            if (existingTrial.usage_count < 5) {
+                console.log('🔄 Reativando trial expirado com usos disponíveis');
+                
+                const { data, error } = await this.supabase
+                    .from('user_trials')
+                    .update({
+                        status: 'active',
+                        ended_at: null
+                    })
+                    .eq('id', existingTrial.id)
+                    .select()
+                    .single();
+                    
+                if (error) throw error;
+                return data;
+            }
+            
+            // Se tem 5+ usos e está expirado, manter expirado
+            console.log('❌ Trial expirado com usos esgotados');
             return existingTrial;
         }
         
-        // Se não tem trial ativo, criar um novo
-        console.log('🔄 Criando novo trial...');
+        // ⭐⭐ Só criar novo trial se não existir nenhum
+        console.log('🔄 Criando NOVO trial...');
         return await this.createNewTrial();
         
     } catch (error) {
@@ -282,53 +293,28 @@ class CopyCraftPro {
 
 async createNewTrial() {
     try {
-        // ⭐⭐ CORREÇÃO: Primeiro verificar se já existe um trial
-        const existingTrial = await this.getUserTrial();
+        const { data, error } = await this.supabase
+            .from('user_trials')
+            .insert([{ 
+                user_id: this.user.id,
+                user_email: this.user.email,
+                started_at: new Date().toISOString(),
+                ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                status: 'active',
+                usage_count: 0,
+                max_usages: 5,
+                usage_limit_type: 'usages'
+            }])
+            .select()
+            .single();
+            
+        if (error) throw error;
         
-        if (existingTrial) {
-            // Se já existe, atualizar para reativar
-            const { data, error } = await this.supabase
-                .from('user_trials')
-                .update({
-                    started_at: new Date().toISOString(),
-                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    status: 'active',
-                    usage_count: 0,
-                    max_usages: 5,
-                    usage_limit_type: 'usages',
-                    ended_at: null
-                })
-                .eq('id', existingTrial.id)
-                .select()
-                .single();
-                
-            if (error) throw error;
-            console.log('✅ Trial reativado:', data);
-            return data;
-        } else {
-            // Se não existe, criar novo
-            const { data, error } = await this.supabase
-                .from('user_trials')
-                .insert([{ 
-                    user_id: this.user.id,
-                    user_email: this.user.email,
-                    started_at: new Date().toISOString(),
-                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    status: 'active',
-                    usage_count: 0,
-                    max_usages: 5,
-                    usage_limit_type: 'usages'
-                }])
-                .select()
-                .single();
-                
-            if (error) throw error;
-            console.log('🎉 NOVO Trial criado:', data);
-            return data;
-        }
+        console.log('🎉 NOVO Trial criado:', data);
+        return data;
         
     } catch (error) {
-        console.error('❌ Erro ao criar/atualizar trial:', error);
+        console.error('❌ Erro ao criar trial:', error);
         return null;
     }
 }
@@ -1323,6 +1309,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
