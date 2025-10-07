@@ -35,74 +35,29 @@ class CopyCraftPro {
     await this.loadFavorites();
 }
 
-// ⭐⭐ ADICIONE esta função se registerUsage não existir
-async addMissingFunctions() {
-    console.log('🔄 Adicionando funções faltantes...');
-    
-    // Cole aqui a função registerUsage completa se ela não existir
-    this.registerUsage = async function() {
-        if (!this.user) return false;
-        
-        try {
-            console.log('🔄 Registrando uso para:', this.user.email);
+       async checkAuthState() {
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (user) {
+            this.user = user;
+            this.updateAuthUI();
+            console.log('✅ Usuário logado:', user.email);
             
-            const trial = await this.getUserTrial();
-            
-            if (!trial || trial.status !== 'active') {
-                console.log('❌ Trial não encontrado ou inativo');
-                return false;
-            }
-            
-            console.log('📊 Trial antes do uso:', trial);
-            
-            const currentUsage = trial.usage_count || 0;
-            const newUsageCount = currentUsage + 1;
-            
-            console.log(`🎯 Novo uso: ${newUsageCount}/5`);
-            
-            if (newUsageCount >= 5) {
-                console.log('🚫 Limite de 5 usos atingido');
-                
-                const { error } = await this.supabase
-                    .from('user_trials')
-                    .update({
-                        usage_count: newUsageCount,
-                        status: 'expired',
-                        ended_at: new Date().toISOString()
-                    })
-                    .eq('user_id', this.user.id);
-                
-                if (error) {
-                    console.error('❌ Erro ao expirar trial:', error);
-                    return false;
+            // ⭐⭐ INICIAR TRIAL AUTOMATICAMENTE
+            try {
+                const trial = await this.startTrial();
+                if (trial) {
+                    console.log('🎉 Trial ativado para usuário');
                 }
-                
-                return false;
+            } catch (error) {
+                console.error('❌ Erro ao iniciar trial:', error);
             }
-            
-            const { error } = await this.supabase
-                .from('user_trials')
-                .update({
-                    usage_count: newUsageCount
-                })
-                .eq('user_id', this.user.id);
-            
-            if (error) {
-                console.error('❌ Erro ao atualizar uso:', error);
-                return true;
-            }
-            
-            console.log('✅ Uso registrado com sucesso:', newUsageCount);
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Erro inesperado:', error);
-            return true;
+        } else {
+            console.log('❌ Usuário não logado');
+            this.user = null;
+            this.favorites = [];
+            this.updateAuthUI();
         }
-    };
-    
-    console.log('✅ Funções adicionadas com sucesso');
-}
+    }
 
    async loginWithGoogle() {
     const loginButton = document.getElementById('loginButton');
@@ -284,7 +239,7 @@ async loadFavoritesFromSupabase() {
     }
 }
 
-     // ⭐⭐ ATUALIZE a função startTrial (apenas adicione user_email):
+      // ⭐⭐ ATUALIZE a função startTrial (apenas adicione user_email):
 async startTrial() {
     if (!this.user) return;
     
@@ -322,7 +277,6 @@ async startTrial() {
     }
 }
 
-
     
           async getUserTrial() {
         if (!this.user) return null;
@@ -350,75 +304,8 @@ async startTrial() {
         }
     }
 
-// ⭐⭐ ADICIONE APENAS ESTA FUNÇÃO NOVA (após getUserTrial):
-async registerUsage() {
-    if (!this.user) return false;
     
-    try {
-        console.log('🔄 Registrando uso...');
-        
-        const trial = await this.getUserTrial();
-        
-        if (!trial || trial.status !== 'active') {
-            console.log('❌ Trial não encontrado ou inativo');
-            return false;
-        }
-        
-        console.log('📊 Trial antes do uso:', trial);
-        
-        // ⭐⭐ SISTEMA SIMPLES: usar ends_at como contador
-        const currentUsage = trial.usage_count || 0;
-        const newUsageCount = currentUsage + 1;
-        
-        console.log(`🎯 Novo uso: ${newUsageCount}/5`);
-        
-        // Verificar se atingiu o limite
-        if (newUsageCount >= 5) {
-            console.log('🚫 Limite de 5 usos atingido');
-            
-            // Marcar como expirado
-            const { error } = await this.supabase
-                .from('user_trials')
-                .update({
-                    usage_count: newUsageCount,
-                    status: 'expired',
-                    ended_at: new Date().toISOString()
-                })
-                .eq('user_id', this.user.id);
-            
-            if (error) {
-                console.error('❌ Erro ao expirar trial:', error);
-                return false;
-            }
-            
-            return false;
-        }
-        
-        // ⭐⭐ Atualizar contador
-        const { error } = await this.supabase
-            .from('user_trials')
-            .update({
-                usage_count: newUsageCount
-            })
-            .eq('user_id', this.user.id);
-        
-        if (error) {
-            console.error('❌ Erro ao atualizar uso:', error);
-            return true; // ⭐⭐ Permite usar mesmo com erro
-        }
-        
-        console.log('✅ Uso registrado com sucesso');
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Erro inesperado ao registrar uso:', error);
-        return true; // ⭐⭐ Permite usar mesmo com erro
-    }
-}
-
-
-    
-           // ⭐⭐ SUBSTITUA a função checkTrialStatus por esta:
+       // ⭐⭐ SUBSTITUA a função checkTrialStatus por esta:
 async checkTrialStatus() {
     try {
         const trial = await this.getUserTrial();
@@ -497,7 +384,44 @@ async checkTrialStatus() {
         };
     }
 }
-
+        
+        // ⭐⭐ FALLBACK: Se for sistema antigo (dias), verificar também
+        if (trial.usage_limit_type === 'days' && trial.ends_at) {
+            const now = new Date();
+            const endsAt = new Date(trial.ends_at);
+            
+            if (now > endsAt) {
+                console.log('❌ Trial expirado por data');
+                return { 
+                    hasTrial: false, 
+                    message: 'Trial expirado',
+                    usagesLeft: 0,
+                    totalUsages: maxUsages
+                };
+            }
+        }
+        
+        console.log('✅ Trial ativo com usos disponíveis');
+        return {
+            hasTrial: true,
+            message: `${usagesLeft} usos restantes`,
+            usagesLeft: usagesLeft,
+            totalUsages: maxUsages,
+            usageCount: currentUsage,
+            type: 'usages'
+        };
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar status do trial:', error);
+        return { 
+            hasTrial: false, 
+            message: 'Erro ao verificar trial',
+            usagesLeft: 0,
+            totalUsages: 5
+        };
+    }
+}
+    
    // ⭐⭐ SUBSTITUA a função updateTrialBadge por esta:
 async updateTrialBadge() {
     const trialBadge = document.getElementById('trialBadge');
@@ -513,6 +437,7 @@ async updateTrialBadge() {
         trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     }
 }
+
     
     
 selectTemplate(e) {
@@ -819,17 +744,20 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-        async generateContent(e) {
+     // ⭐⭐ SUBSTITUA a função generateContent por esta:
+async generateContent(e) {
     e.preventDefault();
     
+    // Verificar se usuário está logado
     if (!this.user) {
         alert('⚠️ Faça login para gerar conteúdos!');
         this.loginWithGoogle();
         return;
     }
     
-    // ⭐⭐ CORREÇÃO: APENAS UMA VEZ registrar o uso
+    // ⭐⭐ NOVO: Registrar uso ANTES de gerar conteúdo
     const canUse = await this.registerUsage();
+    
     if (!canUse) {
         this.showTrialExpiredModal();
         return;
@@ -1372,7 +1300,6 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
-
 
 
 
