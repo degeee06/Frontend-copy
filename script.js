@@ -303,92 +303,120 @@ class CopyCraftPro {
         }
     }
 
-    async getUserTrial() {
-        if (!this.user) return null;
-        
-        try {
-            const { data, error } = await this.supabase
-                .from('user_trials')
-                .select('*')
-                .eq('user_id', this.user.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-                
-            if (error) {
-                console.error('❌ Erro ao buscar trial:', error);
+   async getUserTrial() {
+    if (!this.user) return null;
+    
+    try {
+        const { data, error } = await this.supabase
+            .from('user_trials')
+            .select('*')
+            .eq('user_id', this.user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+            
+        if (error) {
+            if (error.code === 'PGRST116') {
+                console.log('📝 Nenhum trial encontrado para o usuário');
                 return null;
             }
-            
-            console.log('📊 Trial mais recente:', data);
-            return data;
-        } catch (error) {
             console.error('❌ Erro ao buscar trial:', error);
             return null;
         }
-    }
-
-    async registerUsage() {
-        if (!this.user) return false;
         
-        try {
-            console.log('🔄 Registrando uso...');
-            
-            const trial = await this.getUserTrial();
-            
-            if (!trial || trial.status !== 'active') {
-                console.log('❌ Trial não encontrado ou inativo');
-                return false;
-            }
-            
-            const currentUsage = trial.usage_count || 0;
-            const newUsageCount = currentUsage + 1;
-            
-            console.log(`🎯 Novo uso: ${newUsageCount}/5`);
-            
-            // Verificar se atingiu o limite
-            if (newUsageCount >= 5) {
-                console.log('🚫 Limite de usos atingido');
-                
-                await this.supabase
-                    .from('user_trials')
-                    .update({
-                        usage_count: newUsageCount,
-                        status: 'expired',
-                        ended_at: new Date().toISOString()
-                    })
-                    .eq('user_id', this.user.id);
-                
-                return false;
-            }
-            
-            // Atualizar uso no Supabase
-            const { error } = await this.supabase
-                .from('user_trials')
-                .update({
-                    usage_count: newUsageCount
-                })
-                .eq('user_id', this.user.id);
-            
-            if (error) {
-                console.error('❌ Erro ao atualizar uso:', error);
-                return false;
-            }
-            
-            console.log('✅ Uso registrado no Supabase');
-            
-            // Atualizar UI
-            setTimeout(async () => {
-                await this.updateTrialBadge();
-            }, 300);
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Erro inesperado:', error);
+        console.log('✅ Trial encontrado:', data);
+        return data;
+    } catch (error) {
+        console.error('❌ Erro ao buscar trial:', error);
+        return null;
+    }
+}
+
+   async registerUsage() {
+    if (!this.user) return false;
+    
+    try {
+        console.log('🔄 Registrando uso...');
+        
+        const trial = await this.getUserTrial();
+        
+        if (!trial) {
+            console.log('❌ Nenhum trial encontrado para o usuário');
             return false;
         }
+        
+        console.log('📊 Trial atual:', {
+            id: trial.id,
+            status: trial.status,
+            usage_count: trial.usage_count,
+            max_usages: trial.max_usages
+        });
+        
+        if (trial.status !== 'active') {
+            console.log('❌ Trial não está ativo:', trial.status);
+            return false;
+        }
+        
+        const currentUsage = trial.usage_count || 0;
+        const maxUsages = trial.max_usages || 5;
+        const newUsageCount = currentUsage + 1;
+        
+        console.log(`🎯 Novo uso: ${currentUsage} → ${newUsageCount}/${maxUsages}`);
+        
+        // Verificar se atingiu o limite
+        if (newUsageCount > maxUsages) {
+            console.log('🚫 Limite de usos atingido');
+            
+            // Atualizar status para expired
+            const { error: updateError } = await this.supabase
+                .from('user_trials')
+                .update({
+                    usage_count: newUsageCount,
+                    status: 'expired',
+                    ended_at: new Date().toISOString()
+                })
+                .eq('id', trial.id);
+            
+            if (updateError) {
+                console.error('❌ Erro ao atualizar trial para expirado:', updateError);
+            } else {
+                console.log('✅ Trial marcado como expirado');
+            }
+            
+            return false;
+        }
+        
+        // Atualizar uso no Supabase - CORREÇÃO: usar trial.id ao invés de user_id
+        const { data, error } = await this.supabase
+            .from('user_trials')
+            .update({
+                usage_count: newUsageCount,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', trial.id)
+            .select();
+        
+        if (error) {
+            console.error('❌ Erro ao atualizar uso no Supabase:', error);
+            return false;
+        }
+        
+        console.log('✅ Uso registrado no Supabase:', data);
+        
+        // Atualizar UI
+        setTimeout(async () => {
+            await this.updateTrialBadge();
+        }, 500);
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Erro inesperado no registerUsage:', error);
+        return false;
     }
+}
+
+    
 
     async checkTrialStatus() {
         try {
@@ -1240,3 +1268,4 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
