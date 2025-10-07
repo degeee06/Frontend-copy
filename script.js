@@ -239,7 +239,6 @@ async loadFavoritesFromSupabase() {
     }
 }
 
-      // ⭐⭐ ATUALIZE a função startTrial (apenas adicione user_email):
 async startTrial() {
     if (!this.user) return;
     
@@ -249,26 +248,51 @@ async startTrial() {
         
         if (existingTrial) {
             console.log('✅ Trial já existe, reutilizando:', existingTrial);
+            
+            // ⭐⭐ VERIFICAR se o trial tem todas as colunas necessárias
+            if (!existingTrial.usage_count && existingTrial.usage_count !== 0) {
+                console.log('🔄 Trial antigo, atualizando para novo sistema...');
+                
+                // Atualizar trial antigo para novo sistema
+                const { error } = await this.supabase
+                    .from('user_trials')
+                    .update({
+                        usage_count: 0,
+                        max_usages: 5,
+                        usage_limit_type: 'usages',
+                        user_email: this.user.email
+                    })
+                    .eq('id', existingTrial.id);
+                
+                if (error) {
+                    console.error('❌ Erro ao atualizar trial:', error);
+                } else {
+                    console.log('✅ Trial atualizado para novo sistema');
+                }
+            }
+            
             return existingTrial;
         }
         
-        // ⭐⭐ SEGUNDO: Criar novo apenas se não existir
+        // ⭐⭐ SEGUNDO: Criar NOVO trial com todas as colunas
         const { data, error } = await this.supabase
             .from('user_trials')
             .insert([{ 
                 user_id: this.user.id,
-                user_email: this.user.email, // ⭐⭐ ADICIONE ESTA LINHA
+                user_email: this.user.email,
                 started_at: new Date().toISOString(),
                 ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
                 status: 'active',
-                usage_count: 0 // ⭐⭐ INICIAR COM 0 USOS
+                usage_count: 0,        // ⭐⭐ INICIAR COM 0 USOS
+                max_usages: 5,         // ⭐⭐ LIMITE DE 5 USOS  
+                usage_limit_type: 'usages' // ⭐⭐ TIPO DE LIMITE
             }])
             .select()
             .single();
             
         if (error) throw error;
         
-        console.log('🎉 NOVO Trial criado:', data);
+        console.log('🎉 NOVO Trial criado (sistema de usos):', data);
         return data;
         
     } catch (error) {
@@ -373,8 +397,7 @@ async registerUsage() {
 
 
     
-           // ⭐⭐ SUBSTITUA a função checkTrialStatus por esta:
-async checkTrialStatus() {
+        async checkTrialStatus() {
     try {
         const trial = await this.getUserTrial();
         
@@ -388,7 +411,13 @@ async checkTrialStatus() {
             };
         }
         
-        console.log('🔍 Trial encontrado para verificação:', trial);
+        console.log('🔍 Trial encontrado para verificação:', {
+            id: trial.id,
+            status: trial.status,
+            usage_count: trial.usage_count,
+            max_usages: trial.max_usages,
+            usage_limit_type: trial.usage_limit_type
+        });
         
         if (trial.status !== 'active') {
             console.log('❌ Trial não está ativo:', trial.status);
@@ -402,9 +431,10 @@ async checkTrialStatus() {
         
         // ⭐⭐ SISTEMA DE USOS - Verificar se tem usos disponíveis
         const currentUsage = trial.usage_count || 0;
-        const usagesLeft = 5 - currentUsage;
+        const maxUsages = trial.max_usages || 5;
+        const usagesLeft = maxUsages - currentUsage;
         
-        console.log(`📊 Status usos: ${currentUsage}/5 | Restantes: ${usagesLeft}`);
+        console.log(`📊 Status usos: ${currentUsage}/${maxUsages} | Restantes: ${usagesLeft}`);
         
         if (usagesLeft <= 0) {
             console.log('🚫 Sem usos disponíveis');
@@ -412,24 +442,8 @@ async checkTrialStatus() {
                 hasTrial: false, 
                 message: 'Usos esgotados',
                 usagesLeft: 0,
-                totalUsages: 5
+                totalUsages: maxUsages
             };
-        }
-        
-        // ⭐⭐ FALLBACK: Se ainda tem ends_at, verificar também
-        if (trial.ends_at) {
-            const now = new Date();
-            const endsAt = new Date(trial.ends_at);
-            
-            if (now > endsAt) {
-                console.log('❌ Trial expirado por data');
-                return { 
-                    hasTrial: false, 
-                    message: 'Trial expirado',
-                    usagesLeft: 0,
-                    totalUsages: 5
-                };
-            }
         }
         
         console.log('✅ Trial ativo com usos disponíveis');
@@ -437,7 +451,7 @@ async checkTrialStatus() {
             hasTrial: true,
             message: `${usagesLeft} usos restantes`,
             usagesLeft: usagesLeft,
-            totalUsages: 5,
+            totalUsages: maxUsages,
             usageCount: currentUsage,
             type: 'usages'
         };
@@ -1329,6 +1343,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
