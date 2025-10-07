@@ -144,11 +144,18 @@ class CopyCraftPro {
     }
 
     
-   initializeEventListeners() {
-    // Template generation form
+  initializeEventListeners() {
+    // Template generation form - DEBUG
     const generateForm = document.getElementById('generateForm');
+    console.log('🔍 generateForm encontrado?', !!generateForm);
+    
     if (generateForm) {
-        generateForm.addEventListener('submit', (e) => this.generateContent(e));
+        generateForm.addEventListener('submit', (e) => {
+            console.log('🎯 FORM SUBMIT disparado!');
+            this.generateContent(e);
+        });
+    } else {
+        console.error('❌ generateForm NÃO ENCONTRADO!');
     }
 
     // Tone selection
@@ -1343,6 +1350,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
