@@ -12,41 +12,97 @@ class CopyCraftPro {
         this.init();
     }
 
-    async init() { // ⭐⭐ Adicionar async
+   async init() { 
     if (typeof feather !== 'undefined') {
         feather.replace();
     }
     
-    // ⭐⭐ CORREÇÃO: Aguardar o checkAuthState terminar
-    await this.checkAuthState(); // ⭐⭐ Adicionar await
+    // ⭐⭐ DEBUG: Verificar se registerUsage existe
+    console.log('🔍 Verificando funções...');
+    console.log('registerUsage existe?', typeof this.registerUsage);
+    console.log('checkTrialStatus existe?', typeof this.checkTrialStatus);
+    console.log('getUserTrial existe?', typeof this.getUserTrial);
+    
+    if (typeof this.registerUsage !== 'function') {
+        console.error('❌ CRÍTICO: registerUsage NÃO EXISTE!');
+        // ⭐⭐ ADICIONE A FUNÇÃO registerUsage AQUI SE NÃO EXISTIR
+        await this.addMissingFunctions();
+    }
+    
+    await this.checkAuthState();
     
     this.initializeEventListeners();
-    await this.loadFavorites(); // ⭐⭐ Adicionar await
+    await this.loadFavorites();
 }
 
-       async checkAuthState() {
-        const { data: { user } } = await this.supabase.auth.getUser();
-        if (user) {
-            this.user = user;
-            this.updateAuthUI();
-            console.log('✅ Usuário logado:', user.email);
+// ⭐⭐ ADICIONE esta função se registerUsage não existir
+async addMissingFunctions() {
+    console.log('🔄 Adicionando funções faltantes...');
+    
+    // Cole aqui a função registerUsage completa se ela não existir
+    this.registerUsage = async function() {
+        if (!this.user) return false;
+        
+        try {
+            console.log('🔄 Registrando uso para:', this.user.email);
             
-            // ⭐⭐ INICIAR TRIAL AUTOMATICAMENTE
-            try {
-                const trial = await this.startTrial();
-                if (trial) {
-                    console.log('🎉 Trial ativado para usuário');
-                }
-            } catch (error) {
-                console.error('❌ Erro ao iniciar trial:', error);
+            const trial = await this.getUserTrial();
+            
+            if (!trial || trial.status !== 'active') {
+                console.log('❌ Trial não encontrado ou inativo');
+                return false;
             }
-        } else {
-            console.log('❌ Usuário não logado');
-            this.user = null;
-            this.favorites = [];
-            this.updateAuthUI();
+            
+            console.log('📊 Trial antes do uso:', trial);
+            
+            const currentUsage = trial.usage_count || 0;
+            const newUsageCount = currentUsage + 1;
+            
+            console.log(`🎯 Novo uso: ${newUsageCount}/5`);
+            
+            if (newUsageCount >= 5) {
+                console.log('🚫 Limite de 5 usos atingido');
+                
+                const { error } = await this.supabase
+                    .from('user_trials')
+                    .update({
+                        usage_count: newUsageCount,
+                        status: 'expired',
+                        ended_at: new Date().toISOString()
+                    })
+                    .eq('user_id', this.user.id);
+                
+                if (error) {
+                    console.error('❌ Erro ao expirar trial:', error);
+                    return false;
+                }
+                
+                return false;
+            }
+            
+            const { error } = await this.supabase
+                .from('user_trials')
+                .update({
+                    usage_count: newUsageCount
+                })
+                .eq('user_id', this.user.id);
+            
+            if (error) {
+                console.error('❌ Erro ao atualizar uso:', error);
+                return true;
+            }
+            
+            console.log('✅ Uso registrado com sucesso:', newUsageCount);
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Erro inesperado:', error);
+            return true;
         }
-    }
+    };
+    
+    console.log('✅ Funções adicionadas com sucesso');
+}
 
    async loginWithGoogle() {
     const loginButton = document.getElementById('loginButton');
@@ -763,20 +819,17 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-         // ⭐⭐ SUBSTITUA a função generateContent por esta:
-async generateContent(e) {
+        async generateContent(e) {
     e.preventDefault();
     
-    // Verificar se usuário está logado
     if (!this.user) {
         alert('⚠️ Faça login para gerar conteúdos!');
         this.loginWithGoogle();
         return;
     }
     
-    // ⭐⭐ NOVO: Registrar uso ANTES de gerar conteúdo
+    // ⭐⭐ CORREÇÃO: APENAS UMA VEZ registrar o uso
     const canUse = await this.registerUsage();
-    
     if (!canUse) {
         this.showTrialExpiredModal();
         return;
@@ -1319,6 +1372,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
