@@ -153,20 +153,25 @@ async function checkTrialStatus() {
         }
     }
 
-    async updateTrialBadge() {
-        const trialBadge = document.getElementById('trialBadge');
-        if (!trialBadge) return;
-        
-        const trialStatus = await this.checkTrialStatus();
-        if (trialStatus.hasTrial) {
-            trialBadge.textContent = `🎯 ${trialStatus.daysLeft}d`;
-            trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+   // ⭐⭐ ATUALIZE updateTrialBadge ⭐⭐
+async updateTrialBadge() {
+    const trialBadge = document.getElementById('trialBadge');
+    if (!trialBadge) return;
+    
+    const trialStatus = await this.checkTrialStatus();
+    
+    if (trialStatus.hasTrial) {
+        if (trialStatus.type === 'usages') {
+            trialBadge.textContent = `🎯 ${trialStatus.usagesLeft}/5`;
         } else {
-            trialBadge.textContent = '💔 Expirado';
-            trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+            trialBadge.textContent = `🎯 ${trialStatus.daysLeft}d`;
         }
+        trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+    } else {
+        trialBadge.textContent = '💔 Expirado';
+        trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     }
-
+}
     
    initializeEventListeners() {
     // Template generation form
@@ -263,41 +268,115 @@ async loadFavoritesFromSupabase() {
     }
 }
 
-       async startTrial() {
-        if (!this.user) return;
+      // ⭐⭐ ATUALIZE A FUNÇÃO startTrial ⭐⭐
+async startTrial() {
+    if (!this.user) return;
+    
+    try {
+        // Verificar se já existe trial
+        const existingTrial = await this.getUserTrial();
         
-        try {
-            // ⭐⭐ PRIMEIRO: Tentar buscar trial existente
-            const existingTrial = await this.getUserTrial();
+        if (existingTrial) {
+            console.log('✅ Trial já existe, reutilizando:', existingTrial);
+            return existingTrial;
+        }
+        
+        // ⭐⭐ NOVO: Criar trial com limite de USOS ⭐⭐
+        const { data, error } = await this.supabase
+            .from('user_trials')
+            .insert([{ 
+                user_id: this.user.id,
+                user_email: this.user.email,
+                started_at: new Date().toISOString(),
+                usage_limit_type: 'usages',
+                max_usages: 5,
+                usage_count: 0,
+                status: 'active'
+            }])
+            .select()
+            .single();
             
-            if (existingTrial) {
-                console.log('✅ Trial já existe, reutilizando:', existingTrial);
-                return existingTrial;
+        if (error) throw error;
+        
+        console.log('🎉 NOVO Trial criado (5 usos):', data);
+        return data;
+        
+    } catch (error) {
+        console.error('❌ Erro ao iniciar trial:', error);
+        return null;
+    }
+}
+
+// ⭐⭐ NOVA FUNÇÃO: Registrar uso ⭐⭐
+async registerUsage() {
+    if (!this.user) return false;
+    
+    try {
+        const trial = await this.getUserTrial();
+        
+        if (!trial || trial.status !== 'active') {
+            return false;
+        }
+        
+        // ⭐⭐ VERIFICAR SE É LIMITE POR USOS ⭐⭐
+        if (trial.usage_limit_type === 'usages') {
+            const newUsageCount = (trial.usage_count || 0) + 1;
+            
+            // Verificar se atingiu o limite
+            if (newUsageCount >= trial.max_usages) {
+                // ⭐⭐ BLOQUEAR - atingiu limite de usos ⭐⭐
+                const { error } = await this.supabase
+                    .from('user_trials')
+                    .update({
+                        usage_count: newUsageCount,
+                        status: 'expired',
+                        ended_at: new Date().toISOString()
+                    })
+                    .eq('user_id', this.user.id);
+                
+                console.log('🚫 Trial expirado - limite de usos atingido');
+                return false;
             }
             
-            // ⭐⭐ SEGUNDO: Criar novo apenas se não existir
-            const { data, error } = await this.supabase
+            // ⭐⭐ ATUALIZAR CONTADOR DE USOS ⭐⭐
+            const { error } = await this.supabase
                 .from('user_trials')
-                .insert([{ 
-                    user_id: this.user.id,
-                    user_email: this.user.email,
-                    started_at: new Date().toISOString(),
-                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    status: 'active'
-                }])
-                .select()
-                .single();
-                
+                .update({
+                    usage_count: newUsageCount,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', this.user.id);
+            
             if (error) throw error;
             
-            console.log('🎉 NOVO Trial criado:', data);
-            return data;
-            
-        } catch (error) {
-            console.error('❌ Erro ao iniciar trial:', error);
-            return null;
+            console.log(`✅ Uso registrado: ${newUsageCount}/${trial.max_usages}`);
+            return true;
         }
+        
+        // ⭐⭐ SE FOR LIMITE POR DIAS (sistema antigo) ⭐⭐
+        const now = new Date();
+        const endsAt = new Date(trial.ends_at);
+        
+        if (now > endsAt) {
+            // Trial expirado por tempo
+            await this.supabase
+                .from('user_trials')
+                .update({
+                    status: 'expired',
+                    ended_at: new Date().toISOString()
+                })
+                .eq('user_id', this.user.id);
+            
+            return false;
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Erro ao registrar uso:', error);
+        return false;
     }
+}
 
 
     
@@ -328,52 +407,76 @@ async loadFavoritesFromSupabase() {
     }
 
     
-             async checkTrialStatus() {
-        try {
-            const trial = await this.getUserTrial();
-            
-            if (!trial) {
-                console.log('❌ Nenhum trial encontrado para o usuário');
-                return { hasTrial: false, message: 'Sem trial ativo' };
-            }
-            
-            console.log('📅 Trial data:', trial);
-            
-            const now = new Date();
-            const endsAt = new Date(trial.ends_at);
-            
-            // ⭐⭐ CORREÇÃO: Comparação simples e direta
-            const isTrialActive = endsAt > now;
-            const timeDiff = endsAt.getTime() - now.getTime();
-            const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
-            
-            console.log('📊 Trial status:', {
-                now: now.toISOString(),
-                endsAt: endsAt.toISOString(), 
-                isTrialActive: isTrialActive,
-                daysLeft: daysLeft
-            });
-            
-            if (!isTrialActive) {
-                return { 
-                    hasTrial: false, 
-                    message: 'Trial expirado',
-                    daysLeft: 0
-                };
-            }
+          // ⭐⭐ ATUALIZE A FUNÇÃO checkTrialStatus ⭐⭐
+async checkTrialStatus() {
+    try {
+        const trial = await this.getUserTrial();
+        
+        if (!trial) {
+            return { 
+                hasTrial: false, 
+                message: 'Sem trial ativo',
+                usagesLeft: 0,
+                totalUsages: 5
+            };
+        }
+        
+        if (trial.status !== 'active') {
+            return { 
+                hasTrial: false, 
+                message: 'Trial expirado',
+                usagesLeft: 0,
+                totalUsages: 5
+            };
+        }
+        
+        // ⭐⭐ VERIFICAR LIMITE POR USOS ⭐⭐
+        if (trial.usage_limit_type === 'usages') {
+            const usagesLeft = trial.max_usages - (trial.usage_count || 0);
             
             return {
-                hasTrial: true,
-                message: `${daysLeft} dias restantes`,
-                daysLeft: daysLeft,
-                trialData: trial
+                hasTrial: usagesLeft > 0,
+                message: `${usagesLeft} usos restantes`,
+                usagesLeft: usagesLeft,
+                totalUsages: trial.max_usages,
+                usageCount: trial.usage_count || 0,
+                type: 'usages'
             };
-            
-        } catch (error) {
-            console.error('❌ Erro ao verificar status do trial:', error);
-            return { hasTrial: false, message: 'Erro ao verificar trial' };
         }
+        
+        // ⭐⭐ VERIFICAR LIMITE POR DIAS (fallback) ⭐⭐
+        const now = new Date();
+        const endsAt = new Date(trial.ends_at);
+        const isTrialActive = endsAt > now;
+        const timeDiff = endsAt.getTime() - now.getTime();
+        const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+        
+        if (!isTrialActive) {
+            return { 
+                hasTrial: false, 
+                message: 'Trial expirado',
+                usagesLeft: 0,
+                totalUsages: 5
+            };
+        }
+        
+        return {
+            hasTrial: true,
+            message: `${daysLeft} dias restantes`,
+            daysLeft: daysLeft,
+            type: 'days'
+        };
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar status do trial:', error);
+        return { 
+            hasTrial: false, 
+            message: 'Erro ao verificar trial',
+            usagesLeft: 0,
+            totalUsages: 5
+        };
     }
+}
 
     async updateTrialBadge() {
         const trialBadge = document.getElementById('trialBadge');
@@ -698,50 +801,52 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-           async generateContent(e) {
-        e.preventDefault();
-        
-        // ⭐⭐ VERIFICAR SE USUÁRIO ESTÁ LOGADO (ESTOU FALTANDO!)
-        if (!this.user) {
-            alert('⚠️ Faça login para gerar conteúdos!');
-            this.loginWithGoogle();
-            return;
-        }
-        
-        // ⭐⭐ VERIFICAR SE TEM TRIAL ATIVO
-        const trialStatus = await this.checkTrialStatus();
-        if (!trialStatus.hasTrial) {
-            this.showTrialExpiredModal(trialStatus);
-            return;
-        }
-
-        if (!this.currentTemplate) {
-            alert('Por favor, selecione um template primeiro.');
-            return;
-        }
-
-        const form = e.target;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
-        submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin inline w-4 h-4 mr-2"></i>Gerando com IA...';
-        submitBtn.disabled = true;
-        feather.replace();
-
-        try {
-            const content = await this.callDeepSeekAPI();
-            this.displayGeneratedContent(content);
-        } catch (error) {
-            console.error('Error generating content:', error);
-            alert('Erro ao gerar conteúdo. Verifique sua API Key e tente novamente.');
-            const sampleContent = this.generateSampleContent();
-            this.displayGeneratedContent(sampleContent);
-        }
-
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-        feather.replace();
+         async generateContent(e) {
+    e.preventDefault();
+    
+    // Verificar se usuário está logado
+    if (!this.user) {
+        alert('⚠️ Faça login para gerar conteúdos!');
+        this.loginWithGoogle();
+        return;
     }
+    
+    // ⭐⭐ NOVO: Registrar uso ANTES de gerar conteúdo ⭐⭐
+    const canUse = await this.registerUsage();
+    
+    if (!canUse) {
+        this.showTrialExpiredModal();
+        return;
+    }
+    
+    // Resto do código permanece igual...
+    if (!this.currentTemplate) {
+        alert('Por favor, selecione um template primeiro.');
+        return;
+    }
+
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin inline w-4 h-4 mr-2"></i>Gerando com IA...';
+    submitBtn.disabled = true;
+    feather.replace();
+
+    try {
+        const content = await this.callDeepSeekAPI();
+        this.displayGeneratedContent(content);
+    } catch (error) {
+        console.error('Error generating content:', error);
+        alert('Erro ao gerar conteúdo. Verifique sua API Key e tente novamente.');
+        const sampleContent = this.generateSampleContent();
+        this.displayGeneratedContent(sampleContent);
+    }
+
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+    feather.replace();
+}
 
        // ⭐⭐ MODAL DE TRIAL EXPIRADO
     showTrialExpiredModal(trialStatus) {
@@ -1251,6 +1356,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
