@@ -431,7 +431,6 @@ async debugTrial() {
         if (newUsageCount > maxUsages) {
             console.log('🚫 Limite de usos atingido');
             
-            // Atualizar status para expired
             const { error: updateError } = await this.supabase
                 .from('user_trials')
                 .update({
@@ -450,28 +449,47 @@ async debugTrial() {
             return false;
         }
         
-        // ⭐⭐ CORREÇÃO: Remover updated_at que não existe na tabela
+        // ⭐⭐ CORREÇÃO: Testar diferentes formas de UPDATE
+        console.log('🔄 Tentando UPDATE no trial ID:', trial.id);
+        
+        // Tentativa 1: UPDATE simples
         const { data, error } = await this.supabase
             .from('user_trials')
-            .update({
-                usage_count: newUsageCount
-                // ⭐⭐ REMOVIDO: updated_at: new Date().toISOString()
+            .update({ 
+                usage_count: newUsageCount 
             })
             .eq('id', trial.id)
             .select();
         
         if (error) {
-            console.error('❌ Erro ao atualizar uso no Supabase:', error);
-            console.error('Detalhes do erro:', error.message);
-            return false;
+            console.error('❌ Erro no UPDATE:', error);
+            
+            // Tentativa 2: UPDATE com mais campos
+            const { data: data2, error: error2 } = await this.supabase
+                .from('user_trials')
+                .update({ 
+                    usage_count: newUsageCount,
+                    status: 'active' // manter ativo
+                })
+                .eq('id', trial.id)
+                .select();
+                
+            if (error2) {
+                console.error('❌ Erro na segunda tentativa:', error2);
+                return false;
+            }
+            
+            console.log('✅ Uso registrado (tentativa 2):', data2);
+        } else {
+            console.log('✅ Uso registrado (tentativa 1):', data);
         }
         
-        console.log('✅ Uso registrado no Supabase:', data);
-        
-        // Atualizar UI
+        // ⭐⭐ VERIFICAÇÃO: Buscar dados atualizados
         setTimeout(async () => {
+            const updatedTrial = await this.getUserTrial();
+            console.log('🔄 Trial após UPDATE:', updatedTrial);
             await this.updateTrialBadge();
-        }, 500);
+        }, 1000);
         
         return true;
         
@@ -481,7 +499,24 @@ async debugTrial() {
     }
 }
     
+// Cole isso no console para testar o UPDATE manualmente
+async function testUpdate() {
+    const trial = await copyCraft.getUserTrial();
+    console.log('Trial atual:', trial);
+    
+    if (trial) {
+        const { data, error } = await copyCraft.supabase
+            .from('user_trials')
+            .update({ usage_count: 1 })
+            .eq('id', trial.id)
+            .select();
+            
+        console.log('Resultado do UPDATE:', { data, error });
+    }
+}
+testUpdate();
 
+    
     async checkTrialStatus() {
         try {
             const trial = await this.getUserTrial();
@@ -1332,6 +1367,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
