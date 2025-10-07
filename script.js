@@ -337,30 +337,35 @@ async startTrial() {
     }
 
 async registerUsage() {
-    if (!this.user) return false;
+    if (!this.user) {
+        console.log('❌ Usuário não logado');
+        return false;
+    }
     
     try {
-        console.log('🔄 Registrando uso...');
+        console.log('🔄 1. Iniciando registerUsage...');
         
         const trial = await this.getUserTrial();
+        console.log('🔄 2. Trial obtido:', trial);
         
         if (!trial || trial.status !== 'active') {
             console.log('❌ Trial não encontrado ou inativo');
             return false;
         }
         
-        console.log('📊 Trial antes do uso:', trial);
+        console.log('📊 3. Trial antes do uso:', trial);
         
         const currentUsage = trial.usage_count || 0;
         const newUsageCount = currentUsage + 1;
         
-        console.log(`🎯 Novo uso: ${newUsageCount}/5`);
+        console.log(`🎯 4. Novo uso: ${newUsageCount}/5`);
+        
+        // ⭐⭐ VERIFICAR se está entrando no IF correto
+        console.log(`🔍 5. Verificando limite: ${newUsageCount} >= 5?`, newUsageCount >= 5);
         
         if (newUsageCount >= 5) {
-            console.log('🚫 Limite de 5 usos atingido');
+            console.log('🚫 6. LIMITE ATINGIDO - Expirando trial...');
             
-            // ⭐⭐ DEBUG DO UPDATE
-            console.log('🐛 DEBUG - Tentando EXPIRAR trial...');
             const { data, error } = await this.supabase
                 .from('user_trials')
                 .update({
@@ -369,40 +374,41 @@ async registerUsage() {
                     ended_at: new Date().toISOString()
                 })
                 .eq('user_id', this.user.id)
-                .select(); // ⭐⭐ ADICIONE .select() para ver o retorno
+                .select();
             
-            console.log('🐛 DEBUG - Resposta do UPDATE (expirar):', { data, error });
+            console.log('🐛 7. Resposta UPDATE (expirar):', { data, error });
             
             if (error) {
                 console.error('❌ Erro ao expirar trial:', error);
                 return false;
             }
             
+            console.log('✅ 8. Trial expirado com sucesso');
             return false;
         }
         
-        // ⭐⭐ DEBUG DO UPDATE
-        console.log('🐛 DEBUG - Tentando ATUALIZAR uso...');
+        console.log('🔄 9. ATUALIZANDO uso no Supabase...');
+        
         const { data, error } = await this.supabase
             .from('user_trials')
             .update({
                 usage_count: newUsageCount
             })
             .eq('user_id', this.user.id)
-            .select(); // ⭐⭐ ADICIONE .select() para ver o retorno
+            .select();
         
-        console.log('🐛 DEBUG - Resposta do UPDATE:', { data, error });
+        console.log('🐛 10. Resposta UPDATE:', { data, error });
         
         if (error) {
-            console.error('❌ Erro ao atualizar uso:', error);
+            console.error('❌ 11. Erro no UPDATE:', error);
             return true;
         }
         
-        console.log('✅ Uso registrado com sucesso - Dados atualizados:', data);
+        console.log('✅ 12. Uso registrado com sucesso - Dados:', data);
         return true;
         
     } catch (error) {
-        console.error('❌ Erro inesperado ao registrar uso:', error);
+        console.error('❌ 13. Erro inesperado:', error);
         return true;
     }
 }
@@ -1355,6 +1361,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
