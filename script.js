@@ -478,22 +478,7 @@ async checkTrialStatus() {
     }
 }
 
-    async updateTrialBadge() {
-        const trialBadge = document.getElementById('trialBadge');
-        if (!trialBadge) return;
-        
-        console.log('🔄 Atualizando badge do trial...');
-        const trialStatus = await this.checkTrialStatus();
-        console.log('🎯 Status do trial:', trialStatus);
-        
-        if (trialStatus.hasTrial) {
-            trialBadge.textContent = `🎯 ${trialStatus.daysLeft}d`;
-            trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-        } else {
-            trialBadge.textContent = '💔 Expirado';
-            trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-        }
-    }
+
 
     
     
@@ -1356,6 +1341,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
