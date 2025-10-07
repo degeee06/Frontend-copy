@@ -12,6 +12,7 @@ class CopyCraftPro {
         this.init();
     }
 
+    
     async init() { // ⭐⭐ Adicionar async
     if (typeof feather !== 'undefined') {
         feather.replace();
@@ -48,6 +49,40 @@ class CopyCraftPro {
         }
     }
 
+
+// NO script.js - ADICIONE esta função:
+async function checkUserSubscription() {
+    if (!copyCraft.user) return null;
+    
+    try {
+        const response = await fetch(`https://backend-copy-1e16.onrender.com/api/subscription/${copyCraft.user.email}`);
+        const subscription = await response.json();
+        
+        return subscription;
+    } catch (error) {
+        console.error('❌ Erro ao verificar assinatura:', error);
+        return null;
+    }
+}
+
+// E atualize a função checkTrialStatus para verificar assinatura também:
+async function checkTrialStatus() {
+    // Primeiro verifica se tem assinatura ativa
+    const subscription = await checkUserSubscription();
+    
+    if (subscription && subscription.status === 'active') {
+        return { 
+            hasActivePlan: true, 
+            message: 'Plano Ativo',
+            type: 'subscription'
+        };
+    }
+    
+    // Se não tem assinatura, verifica trial
+    // ... (seu código atual de trial)
+}
+
+    
    async loginWithGoogle() {
     const loginButton = document.getElementById('loginButton');
     const originalText = loginButton.innerHTML;
@@ -1216,6 +1251,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
