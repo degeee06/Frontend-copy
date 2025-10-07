@@ -775,20 +775,18 @@ updateTemplateForm(templateType) {
         toneOption.classList.add('bg-purple-100', 'text-purple-800');
     }
 
-         // ⭐⭐ SUBSTITUA a função generateContent por esta:
-async generateContent(e) {
+    
+      async generateContent(e) {
     e.preventDefault();
     
-    // Verificar se usuário está logado
     if (!this.user) {
         alert('⚠️ Faça login para gerar conteúdos!');
         this.loginWithGoogle();
         return;
     }
     
-    // ⭐⭐ NOVO: Registrar uso ANTES de gerar conteúdo
+    // ⭐⭐ CORREÇÃO: PRIMEIRO registrar o uso
     const canUse = await this.registerUsage();
-    
     if (!canUse) {
         this.showTrialExpiredModal();
         return;
@@ -1331,6 +1329,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
