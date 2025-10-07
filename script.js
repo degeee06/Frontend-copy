@@ -499,22 +499,6 @@ async debugTrial() {
     }
 }
     
-// Cole isso no console para testar o UPDATE manualmente
-async function testUpdate() {
-    const trial = await copyCraft.getUserTrial();
-    console.log('Trial atual:', trial);
-    
-    if (trial) {
-        const { data, error } = await copyCraft.supabase
-            .from('user_trials')
-            .update({ usage_count: 1 })
-            .eq('id', trial.id)
-            .select();
-            
-        console.log('Resultado do UPDATE:', { data, error });
-    }
-}
-testUpdate();
 
     
     async checkTrialStatus() {
@@ -1367,6 +1351,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
