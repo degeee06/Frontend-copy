@@ -281,35 +281,59 @@ class CopyCraftPro {
 }
 
 async createNewTrial() {
-    // ⭐⭐ CORREÇÃO: Remover a constraint unique ou usar upsert
-    const { data, error } = await this.supabase
-        .from('user_trials')
-        .upsert({ 
-            user_id: this.user.id,
-            user_email: this.user.email,
-            started_at: new Date().toISOString(),
-            ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'active',
-            usage_count: 0,
-            max_usages: 5,
-            usage_limit_type: 'usages',
-            ended_at: null
-        }, {
-            onConflict: 'user_id',
-            ignoreDuplicates: false
-        })
-        .select()
-        .single();
+    try {
+        // ⭐⭐ CORREÇÃO: Primeiro verificar se já existe um trial
+        const existingTrial = await this.getUserTrial();
         
-    if (error) {
+        if (existingTrial) {
+            // Se já existe, atualizar para reativar
+            const { data, error } = await this.supabase
+                .from('user_trials')
+                .update({
+                    started_at: new Date().toISOString(),
+                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'active',
+                    usage_count: 0,
+                    max_usages: 5,
+                    usage_limit_type: 'usages',
+                    ended_at: null
+                })
+                .eq('id', existingTrial.id)
+                .select()
+                .single();
+                
+            if (error) throw error;
+            console.log('✅ Trial reativado:', data);
+            return data;
+        } else {
+            // Se não existe, criar novo
+            const { data, error } = await this.supabase
+                .from('user_trials')
+                .insert([{ 
+                    user_id: this.user.id,
+                    user_email: this.user.email,
+                    started_at: new Date().toISOString(),
+                    ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'active',
+                    usage_count: 0,
+                    max_usages: 5,
+                    usage_limit_type: 'usages'
+                }])
+                .select()
+                .single();
+                
+            if (error) throw error;
+            console.log('🎉 NOVO Trial criado:', data);
+            return data;
+        }
+        
+    } catch (error) {
         console.error('❌ Erro ao criar/atualizar trial:', error);
         return null;
     }
-    
-    console.log('🎉 Trial criado/atualizado com 0 usos:', data);
-    return data;
 }
 
+    
 async getUserTrial() {
     if (!this.user) return null;
     
@@ -426,18 +450,19 @@ async debugTrial() {
             return false;
         }
         
-        // Atualizar uso no Supabase - CORREÇÃO: usar trial.id ao invés de user_id
+        // ⭐⭐ CORREÇÃO: Remover updated_at que não existe na tabela
         const { data, error } = await this.supabase
             .from('user_trials')
             .update({
-                usage_count: newUsageCount,
-                updated_at: new Date().toISOString()
+                usage_count: newUsageCount
+                // ⭐⭐ REMOVIDO: updated_at: new Date().toISOString()
             })
             .eq('id', trial.id)
             .select();
         
         if (error) {
             console.error('❌ Erro ao atualizar uso no Supabase:', error);
+            console.error('Detalhes do erro:', error.message);
             return false;
         }
         
@@ -1307,6 +1332,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
