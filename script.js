@@ -59,7 +59,7 @@ class CopyCraftPro {
             const { data, error } = await this.supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: 'https://frontend-copy-ten.vercel.app'
+                    redirectTo: 'coupiator.vercel.app'
                 }
             });
             
@@ -1460,6 +1460,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
