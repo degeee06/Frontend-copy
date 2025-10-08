@@ -563,30 +563,31 @@ showDailyLimitModal(dailyLimit) {
             const subscriptionDays = Math.floor((new Date() - new Date(subscription.starts_at)) / (1000 * 60 * 60 * 24));
             
             if (subscriptionDays < 7) {
-                // ⭐⭐ PREMIUM TRIAL - primeiros 7 dias (15 usos/dia)
-                const trial = await this.getUserTrial();
-                const dailyUsage = await this.getDailyUsage(trial, 15); // ⭐⭐ AGORA USA CONTAGEM DIÁRIA
-                
-                console.log('🎯 Plano Premium Trial - 15 usos/dia');
-                return {
-                    hasTrial: true,
-                    hasSubscription: true,
-                    isPremiumTrial: true,
-                    message: `Premium Trial - ${dailyUsage.dailyUsagesLeft}/15 usos hoje`,
-                    dailyUsagesLeft: dailyUsage.dailyUsagesLeft,
-                    unlimited: false
-                };
-            } else {
-                // ⭐⭐ PREMIUM - após 7 dias (ilimitado)
-                console.log('🚀 Plano Premium - Ilimitado');
-                return {
-                    hasTrial: false,
-                    hasSubscription: true,
-                    isPremium: true,
-                    message: 'Premium - Ilimitado',
-                    unlimited: true
-                };
-            }
+    // ⭐⭐ PREMIUM TRIAL - primeiros 7 dias (15 usos/dia)
+    const trial = await this.getUserTrial();
+    const dailyUsage = await this.getDailyUsage(trial, 15);
+    
+    console.log('🎯 Plano Premium Trial - 15 usos/dia');
+    return {
+        hasTrial: true,
+        hasSubscription: true,
+        isPremiumTrial: true,
+        message: `Premium Trial - ${dailyUsage.dailyUsagesLeft}/15 usos hoje`,
+        dailyUsagesLeft: dailyUsage.dailyUsagesLeft,
+        unlimited: false
+    };
+} else {
+    // ⭐⭐ PREMIUM - após 7 dias (ilimitado)
+    console.log('🚀 Plano Premium - Ilimitado');
+    return {
+        hasTrial: true,  // ⭐⭐ CORREÇÃO: hasTrial = true
+        hasSubscription: true,
+        isPremium: true,
+        message: 'Premium - Ilimitado',
+        unlimited: true,
+        dailyUsagesLeft: 999 // ⭐⭐ Mostra um número alto
+    };
+}
         }
 
         // ⭐⭐ FREE TRIAL - sem assinatura (5 usos/dia)
@@ -1460,6 +1461,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
