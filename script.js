@@ -116,7 +116,36 @@ class CopyCraftPro {
         }
     }
 
-   async updateTrialBadge() {
+    // ⭐⭐ NOVO MÉTODO: Verificar assinatura ativa
+async getUserSubscription() {
+    if (!this.user) return null;
+    
+    try {
+        const { data, error } = await this.supabase
+            .from('user_subscriptions')
+            .select('*')
+            .eq('user_email', this.user.email)
+            .eq('status', 'active')
+            .gte('ends_at', new Date().toISOString()) // ⭐⭐ Só assinaturas não expiradas
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+            
+        if (error && error.code !== 'PGRST116') {
+            console.error('❌ Erro ao buscar assinatura:', error);
+        }
+        
+        console.log('🔍 Assinatura encontrada:', data);
+        return data;
+    } catch (error) {
+        console.error('❌ Erro ao buscar assinatura:', error);
+        return null;
+    }
+}
+
+    
+   // ⭐⭐ ATUALIZAR: updateTrialBadge para mostrar status Pro
+async updateTrialBadge() {
     const trialBadge = document.getElementById('trialBadge');
     if (!trialBadge) {
         console.log('❌ trialBadge não encontrado');
@@ -124,18 +153,20 @@ class CopyCraftPro {
     }
     
     try {
-        // ⭐⭐ FORÇAR refresh dos dados
-        const trialStatus = await this.checkTrialStatus();
+        const status = await this.checkTrialStatus();
         
-        if (trialStatus.hasTrial) {
-            trialBadge.textContent = `🎯 ${trialStatus.usagesLeft}/5`;
+        if (status.unlimited) {
+            trialBadge.textContent = '🚀 Pro';
+            trialBadge.className = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full ml-2';
+        } else if (status.hasTrial) {
+            trialBadge.textContent = `🎯 ${status.usagesLeft}/5`;
             trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-            console.log('🔄 Badge atualizado para:', trialBadge.textContent);
         } else {
             trialBadge.textContent = '💔 Expirado';
             trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-            console.log('🔄 Badge atualizado para: Expirado');
         }
+        
+        console.log('🔄 Badge atualizado:', trialBadge.textContent);
     } catch (error) {
         console.error('❌ Erro ao atualizar badge:', error);
     }
@@ -407,12 +438,19 @@ async debugTrial() {
     }
 }
 
- async registerUsage() {
+ // ⭐⭐ ATUALIZAR: registerUsage para permitir uso ilimitado
+async registerUsage() {
     if (!this.user) return false;
     
     try {
-        console.log('🔄 Registrando uso...');
-        
+        // ⭐⭐ VERIFICAR SE TEM ASSINATURA ATIVA (acesso ilimitado)
+        const subscription = await this.getUserSubscription();
+        if (subscription && subscription.status === 'active') {
+            console.log('🎉 Usuário Pro - Uso ilimitado permitido');
+            return true; // ⭐⭐ SEMPRE permite para assinantes
+        }
+
+        // Se não tem assinatura, aplicar limite do trial
         const trial = await this.getUserTrial();
         
         if (!trial) {
@@ -426,7 +464,6 @@ async debugTrial() {
         
         console.log(`🎯 Novo uso: ${currentUsage} → ${newUsageCount}/${maxUsages}`);
         
-        // Verificar se atingiu o limite
         if (newUsageCount >= maxUsages) {
             console.log('🚫 Limite de usos atingido');
             
@@ -439,12 +476,10 @@ async debugTrial() {
                 })
                 .eq('id', trial.id);
             
-            // ⭐⭐ ATUALIZAR UI IMEDIATAMENTE
             await this.updateTrialBadge();
             return false;
         }
         
-        // UPDATE normal
         const { error } = await this.supabase
             .from('user_trials')
             .update({ 
@@ -458,88 +493,99 @@ async debugTrial() {
         }
         
         console.log('✅ UPDATE executado com sucesso');
-        
-        // ⭐⭐ CORREÇÃO: Atualizar UI IMEDIATAMENTE
         await this.updateTrialBadge();
-        
         return true;
         
     } catch (error) {
-        console.error('❌ Erro inesperado no registerUsage:', error);
+        console.error('❌ Erro no registerUsage:', error);
         return false;
     }
 }
     
 
     
-    async checkTrialStatus() {
-        try {
-            const trial = await this.getUserTrial();
-            
-            if (!trial) {
-                console.log('❌ Nenhum trial encontrado');
-                return { 
-                    hasTrial: false, 
-                    message: 'Sem trial ativo',
-                    usagesLeft: 0,
-                    totalUsages: 5
-                };
-            }
-            
-            console.log('🔍 Trial encontrado para verificação:', {
-                id: trial.id,
-                status: trial.status,
-                usage_count: trial.usage_count,
-                max_usages: trial.max_usages
-            });
-            
-            if (trial.status !== 'active') {
-                console.log('❌ Trial não está ativo:', trial.status);
-                return { 
-                    hasTrial: false, 
-                    message: 'Trial expirado',
-                    usagesLeft: 0,
-                    totalUsages: 5
-                };
-            }
-            
-            // Sistema de usos - Verificar se tem usos disponíveis
-            const currentUsage = trial.usage_count || 0;
-            const maxUsages = trial.max_usages || 5;
-            const usagesLeft = maxUsages - currentUsage;
-            
-            console.log(`📊 Status usos: ${currentUsage}/${maxUsages} | Restantes: ${usagesLeft}`);
-            
-            if (usagesLeft <= 0) {
-                console.log('🚫 Sem usos disponíveis');
-                return { 
-                    hasTrial: false, 
-                    message: 'Usos esgotados',
-                    usagesLeft: 0,
-                    totalUsages: maxUsages
-                };
-            }
-            
-            console.log('✅ Trial ativo com usos disponíveis');
+   // ⭐⭐ ATUALIZAR: checkTrialStatus para verificar assinatura primeiro
+async checkTrialStatus() {
+    try {
+        // ⭐⭐ PRIMEIRO verificar se tem assinatura ativa
+        const subscription = await this.getUserSubscription();
+        if (subscription && subscription.status === 'active') {
+            console.log('✅ Usuário com assinatura ativa - Acesso ilimitado');
             return {
-                hasTrial: true,
-                message: `${usagesLeft} usos restantes`,
-                usagesLeft: usagesLeft,
-                totalUsages: maxUsages,
-                usageCount: currentUsage,
-                type: 'usages'
+                hasTrial: false,
+                hasSubscription: true,
+                message: 'Assinante Pro',
+                unlimited: true,
+                usagesLeft: '∞'
             };
-            
-        } catch (error) {
-            console.error('❌ Erro ao verificar status do trial:', error);
+        }
+
+        // Se não tem assinatura, verificar trial normal
+        const trial = await this.getUserTrial();
+        
+        if (!trial) {
             return { 
                 hasTrial: false, 
-                message: 'Erro ao verificar trial',
+                hasSubscription: false,
+                message: 'Sem trial ativo',
                 usagesLeft: 0,
                 totalUsages: 5
             };
         }
+        
+        console.log('🔍 Trial encontrado para verificação:', {
+            id: trial.id,
+            status: trial.status,
+            usage_count: trial.usage_count,
+            max_usages: trial.max_usages
+        });
+        
+        if (trial.status !== 'active') {
+            console.log('❌ Trial não está ativo:', trial.status);
+            return { 
+                hasTrial: false, 
+                hasSubscription: false,
+                message: 'Trial expirado',
+                usagesLeft: 0,
+                totalUsages: 5
+            };
+        }
+        
+        const currentUsage = trial.usage_count || 0;
+        const maxUsages = trial.max_usages || 5;
+        const usagesLeft = maxUsages - currentUsage;
+        
+        console.log(`📊 Status usos: ${currentUsage}/${maxUsages} | Restantes: ${usagesLeft}`);
+        
+        if (usagesLeft <= 0) {
+            return { 
+                hasTrial: false, 
+                hasSubscription: false,
+                message: 'Usos esgotados',
+                usagesLeft: 0,
+                totalUsages: maxUsages
+            };
+        }
+        
+        return {
+            hasTrial: true,
+            hasSubscription: false,
+            message: `${usagesLeft} usos restantes`,
+            usagesLeft: usagesLeft,
+            totalUsages: maxUsages,
+            usageCount: currentUsage
+        };
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar status:', error);
+        return { 
+            hasTrial: false, 
+            hasSubscription: false,
+            message: 'Erro ao verificar',
+            usagesLeft: 0
+        };
     }
+}
 
     selectTemplate(e) {
         const card = e.currentTarget;
@@ -1322,6 +1368,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
