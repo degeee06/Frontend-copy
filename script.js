@@ -154,10 +154,14 @@ async getUserSubscription() {
         trialBadge.textContent = '🚀 Premium';
         trialBadge.className = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full ml-2';
     } else if (status.isPremiumTrial) {
-        trialBadge.textContent = `🎯 ${status.dailyUsagesLeft}/15`;
+        // ⭐⭐ CORREÇÃO: Calcular USADOS (15 - restantes)
+        const used = 15 - status.dailyUsagesLeft;
+        trialBadge.textContent = `🎯 ${used}/15`;
         trialBadge.className = 'bg-blue-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     } else if (status.hasTrial) {
-        trialBadge.textContent = `📝 ${status.dailyUsagesLeft}/5`;
+        // ⭐⭐ CORREÇÃO: Calcular USADOS (5 - restantes)
+        const used = 5 - status.dailyUsagesLeft;
+        trialBadge.textContent = `📝 ${used}/5`;
         trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     } else {
         trialBadge.textContent = '💔 Sem usos';
@@ -563,52 +567,40 @@ showDailyLimitModal(dailyLimit) {
             const subscriptionDays = Math.floor((new Date() - new Date(subscription.starts_at)) / (1000 * 60 * 60 * 24));
             
             if (subscriptionDays < 7) {
-                // ⭐⭐ PREMIUM TRIAL - primeiros 7 dias (15 usos/dia)
-                const trial = await this.getUserTrial();
-                const dailyUsage = await this.getDailyUsage(trial, 15);
-                
-                console.log('🎯 Plano Premium Trial - 15 usos/dia');
-                return {
-                    hasTrial: true,  // ⭐⭐ IMPORTANTE: hasTrial = true mesmo com trial expired
-                    hasSubscription: true,
-                    isPremiumTrial: true,
-                    message: `Premium Trial - ${dailyUsage.dailyUsagesLeft}/15 usos hoje`,
-                    dailyUsagesLeft: dailyUsage.dailyUsagesLeft,
-                    unlimited: false
-                };
-            } else {
-                // ⭐⭐ PREMIUM - após 7 dias (ilimitado)
-                console.log('🚀 Plano Premium - Ilimitado');
-                return {
-                    hasTrial: true,  // ⭐⭐ IMPORTANTE: hasTrial = true
-                    hasSubscription: true,
-                    isPremium: true,
-                    message: 'Premium - Ilimitado',
-                    unlimited: true
-                };
-            }
+    // ⭐⭐ PREMIUM TRIAL - primeiros 7 dias (15 usos/dia)
+    const trial = await this.getUserTrial();
+    const dailyUsage = await this.getDailyUsage(trial, 15);
+    
+    console.log('🎯 Plano Premium Trial - 15 usos/dia');
+    return {
+        hasTrial: true,
+        hasSubscription: true,
+        isPremiumTrial: true,
+        message: `Premium Trial - ${dailyUsage.dailyUsagesLeft}/15 usos hoje`,
+        dailyUsagesLeft: dailyUsage.dailyUsagesLeft,
+        unlimited: false
+    };
+} else {
+    // ⭐⭐ PREMIUM - após 7 dias (ilimitado)
+    console.log('🚀 Plano Premium - Ilimitado');
+    return {
+        hasTrial: true,  // ⭐⭐ CORREÇÃO: hasTrial = true
+        hasSubscription: true,
+        isPremium: true,
+        message: 'Premium - Ilimitado',
+        unlimited: true,
+        dailyUsagesLeft: 999 // ⭐⭐ Mostra um número alto
+    };
+}
         }
 
-        // ⭐⭐ Só aplicar regras de trial expired se NÃO TEM ASSINATURA
+        // ⭐⭐ FREE TRIAL - sem assinatura (5 usos/dia)
         const trial = await this.getUserTrial();
         if (!trial) {
             return { 
                 hasTrial: false,
                 isFreeTrial: false,
                 message: 'Sem trial ativo',
-                dailyUsagesLeft: 0
-            };
-        }
-        
-        // ⭐⭐ AGORA USA CONTAGEM DIÁRIA
-        const dailyUsage = await this.getDailyUsage(trial, 5);
-        
-        // ⭐⭐ SÓ verificar status expired se NÃO TEM ASSINATURA
-        if (trial.status !== 'active' && !subscription) {
-            return { 
-                hasTrial: false,
-                isFreeTrial: false,
-                message: 'Trial expirado',
                 dailyUsagesLeft: 0
             };
         }
