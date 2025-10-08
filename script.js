@@ -144,31 +144,24 @@ async getUserSubscription() {
 }
 
     
-   // ⭐⭐ ATUALIZAR: updateTrialBadge para mostrar status Pro
-async updateTrialBadge() {
+  async updateTrialBadge() {
     const trialBadge = document.getElementById('trialBadge');
-    if (!trialBadge) {
-        console.log('❌ trialBadge não encontrado');
-        return;
-    }
+    if (!trialBadge) return;
     
-    try {
-        const status = await this.checkTrialStatus();
-        
-        if (status.unlimited) {
-            trialBadge.textContent = '🚀 Pro';
-            trialBadge.className = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full ml-2';
-        } else if (status.hasTrial) {
-            trialBadge.textContent = `🎯 ${status.usagesLeft}/5`;
-            trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-        } else {
-            trialBadge.textContent = '💔 Expirado';
-            trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-        }
-        
-        console.log('🔄 Badge atualizado:', trialBadge.textContent);
-    } catch (error) {
-        console.error('❌ Erro ao atualizar badge:', error);
+    const status = await this.checkTrialStatus();
+    
+    if (status.unlimited) {
+        trialBadge.textContent = '🚀 Premium';
+        trialBadge.className = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full ml-2';
+    } else if (status.isPremiumTrial) {
+        trialBadge.textContent = `🎯 ${status.dailyUsagesLeft}/15`;
+        trialBadge.className = 'bg-blue-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+    } else if (status.hasTrial) {
+        trialBadge.textContent = `📝 ${status.dailyUsagesLeft}/5`;
+        trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+    } else {
+        trialBadge.textContent = '💔 Sem usos';
+        trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     }
 }
 
@@ -438,63 +431,45 @@ async debugTrial() {
     }
 }
 
- // ⭐⭐ ATUALIZAR: registerUsage para permitir uso ilimitado
 async registerUsage() {
     if (!this.user) return false;
     
     try {
-        // ⭐⭐ VERIFICAR SE TEM ASSINATURA ATIVA (acesso ilimitado)
-        const subscription = await this.getUserSubscription();
-        if (subscription && subscription.status === 'active') {
-            console.log('🎉 Usuário Pro - Uso ilimitado permitido');
-            return true; // ⭐⭐ SEMPRE permite para assinantes
-        }
-
-        // Se não tem assinatura, aplicar limite do trial
-        const trial = await this.getUserTrial();
+        // ⭐⭐ VERIFICAR STATUS ATUAL
+        const status = await this.checkTrialStatus();
         
-        if (!trial) {
-            console.log('❌ Nenhum trial encontrado para o usuário');
-            return false;
+        // ⭐⭐ PREMIUM (após 7 dias) - SEMPRE PERMITE
+        if (status.unlimited) {
+            console.log('🚀 Usuário Premium - Uso ilimitado permitido');
+            return true;
         }
         
-        const currentUsage = trial.usage_count || 0;
-        const maxUsages = trial.max_usages || 5;
-        const newUsageCount = currentUsage + 1;
-        
-        console.log(`🎯 Novo uso: ${currentUsage} → ${newUsageCount}/${maxUsages}`);
-        
-        if (newUsageCount >= maxUsages) {
-            console.log('🚫 Limite de usos atingido');
-            
-            await this.supabase
-                .from('user_trials')
-                .update({
-                    usage_count: maxUsages,
-                    status: 'expired',
-                    ended_at: new Date().toISOString()
-                })
-                .eq('id', trial.id);
-            
-            await this.updateTrialBadge();
-            return false;
+        // ⭐⭐ PREMIUM TRIAL (primeiros 7 dias) - 15 usos/dia
+        if (status.isPremiumTrial) {
+            if (status.dailyUsagesLeft > 0) {
+                console.log('🎯 Premium Trial - Usando 1 dos', status.dailyUsagesLeft, 'restantes');
+                return await this.registerDailyUsage(15); // 15 usos/dia
+            } else {
+                console.log('🚫 Premium Trial - Limite diário de 15 usos atingido');
+                this.showDailyLimitModal(15);
+                return false;
+            }
         }
         
-        const { error } = await this.supabase
-            .from('user_trials')
-            .update({ 
-                usage_count: newUsageCount 
-            })
-            .eq('id', trial.id);
-        
-        if (error) {
-            console.error('❌ Erro no UPDATE:', error);
-            return false;
+        // ⭐⭐ FREE TRIAL - 5 usos/dia
+        if (status.isFreeTrial && status.hasTrial) {
+            if (status.dailyUsagesLeft > 0) {
+                console.log('📝 Free Trial - Usando 1 dos', status.dailyUsagesLeft, 'restantes');
+                return await this.registerDailyUsage(5); // 5 usos/dia
+            } else {
+                console.log('🚫 Free Trial - Limite diário de 5 usos atingido');
+                this.showDailyLimitModal(5);
+                return false;
+            }
         }
         
-        console.log('✅ UPDATE executado com sucesso');
-        await this.updateTrialBadge();
-        return true;
+        console.log('❌ Nenhum uso disponível');
+        return false;
         
     } catch (error) {
         console.error('❌ Erro no registerUsage:', error);
@@ -502,89 +477,206 @@ async registerUsage() {
     }
 }
     
+// ⭐⭐ MÉTODO COMPLETO PARA USOS DIÁRIOS
+async registerDailyUsage(dailyLimit) {
+    const trial = await this.getUserTrial();
+    if (!trial) return false;
+    
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const lastUsageDate = trial.last_usage_date ? new Date(trial.last_usage_date).toISOString().split('T')[0] : null;
+    
+    let dailyUsageCount = trial.daily_usage_count || 0;
+    
+    // ⭐⭐ RESETAR contador se for um novo dia
+    if (lastUsageDate !== today) {
+        dailyUsageCount = 0;
+        console.log('🔄 Novo dia - Resetando contador diário');
+    }
+    
+    // ⭐⭐ VERIFICAR LIMITE DIÁRIO
+    if (dailyUsageCount >= dailyLimit) {
+        console.log(`🚫 Limite diário de ${dailyLimit} usos atingido`);
+        this.showDailyLimitModal(dailyLimit);
+        return false;
+    }
+    
+    const newDailyUsageCount = dailyUsageCount + 1;
+    const newTotalUsageCount = (trial.usage_count || 0) + 1;
+    
+    // ⭐⭐ ATUALIZAR NO BANCO COM NOVAS COLUNAS
+    const { error } = await this.supabase
+        .from('user_trials')
+        .update({ 
+            usage_count: newTotalUsageCount,
+            daily_usage_count: newDailyUsageCount,
+            last_usage_date: today
+        })
+        .eq('id', trial.id);
+    
+    if (error) {
+        console.error('❌ Erro ao atualizar uso diário:', error);
+        return false;
+    }
+    
+    console.log(`✅ Uso diário registrado: ${newDailyUsageCount}/${dailyLimit}`);
+    await this.updateTrialBadge();
+    return true;
+}
+
+// ⭐⭐ MODAL PARA LIMITE DIÁRIO
+showDailyLimitModal(dailyLimit) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white p-8 rounded-2xl max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-feather="clock" class="text-yellow-600 w-8 h-8"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Limite Diário Atingido</h3>
+            <p class="text-gray-600 mb-6">
+                Você utilizou todos os ${dailyLimit} usos de hoje.
+                Os usos serão resetados à meia-noite!
+            </p>
+            <div class="space-y-3">
+                <button onclick="copyCraft.upgradeToPro()" 
+                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+                    🚀 Fazer Upgrade
+                </button>
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
+                    Entendi
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    feather.replace();
+}
+    
 
     
-   // ⭐⭐ ATUALIZAR: checkTrialStatus para verificar assinatura primeiro
-async checkTrialStatus() {
+ async checkTrialStatus() {
     try {
         // ⭐⭐ PRIMEIRO verificar se tem assinatura ativa
         const subscription = await this.getUserSubscription();
         if (subscription && subscription.status === 'active') {
-            console.log('✅ Usuário com assinatura ativa - Acesso ilimitado');
-            return {
-                hasTrial: false,
-                hasSubscription: true,
-                message: 'Assinante Pro',
-                unlimited: true,
-                usagesLeft: '∞'
-            };
+            const subscriptionDays = Math.floor((new Date() - new Date(subscription.starts_at)) / (1000 * 60 * 60 * 24));
+            
+            if (subscriptionDays < 7) {
+                // ⭐⭐ PREMIUM TRIAL - primeiros 7 dias (15 usos/dia)
+                const trial = await this.getUserTrial();
+                const dailyUsage = await this.getDailyUsage(trial, 15); // ⭐⭐ AGORA USA CONTAGEM DIÁRIA
+                
+                console.log('🎯 Plano Premium Trial - 15 usos/dia');
+                return {
+                    hasTrial: true,
+                    hasSubscription: true,
+                    isPremiumTrial: true,
+                    message: `Premium Trial - ${dailyUsage.dailyUsagesLeft}/15 usos hoje`,
+                    dailyUsagesLeft: dailyUsage.dailyUsagesLeft,
+                    unlimited: false
+                };
+            } else {
+                // ⭐⭐ PREMIUM - após 7 dias (ilimitado)
+                console.log('🚀 Plano Premium - Ilimitado');
+                return {
+                    hasTrial: false,
+                    hasSubscription: true,
+                    isPremium: true,
+                    message: 'Premium - Ilimitado',
+                    unlimited: true
+                };
+            }
         }
 
-        // Se não tem assinatura, verificar trial normal
+        // ⭐⭐ FREE TRIAL - sem assinatura (5 usos/dia)
         const trial = await this.getUserTrial();
-        
         if (!trial) {
             return { 
-                hasTrial: false, 
-                hasSubscription: false,
+                hasTrial: false,
+                isFreeTrial: false,
                 message: 'Sem trial ativo',
-                usagesLeft: 0,
-                totalUsages: 5
+                dailyUsagesLeft: 0
             };
         }
         
-        console.log('🔍 Trial encontrado para verificação:', {
-            id: trial.id,
-            status: trial.status,
-            usage_count: trial.usage_count,
-            max_usages: trial.max_usages
+        // ⭐⭐ AGORA USA CONTAGEM DIÁRIA
+        const dailyUsage = await this.getDailyUsage(trial, 5);
+        
+        console.log('🔍 Free Trial encontrado:', {
+            daily_usage_count: dailyUsage.dailyUsageCount,
+            last_usage_date: dailyUsage.lastUsageDate
         });
         
         if (trial.status !== 'active') {
-            console.log('❌ Trial não está ativo:', trial.status);
             return { 
-                hasTrial: false, 
-                hasSubscription: false,
+                hasTrial: false,
+                isFreeTrial: false,
                 message: 'Trial expirado',
-                usagesLeft: 0,
-                totalUsages: 5
+                dailyUsagesLeft: 0
             };
         }
         
-        const currentUsage = trial.usage_count || 0;
-        const maxUsages = trial.max_usages || 5;
-        const usagesLeft = maxUsages - currentUsage;
+        console.log(`📊 Free Trial: ${dailyUsage.dailyUsageCount}/5 | Restantes hoje: ${dailyUsage.dailyUsagesLeft}`);
         
-        console.log(`📊 Status usos: ${currentUsage}/${maxUsages} | Restantes: ${usagesLeft}`);
-        
-        if (usagesLeft <= 0) {
+        if (dailyUsage.dailyUsagesLeft <= 0) {
             return { 
-                hasTrial: false, 
-                hasSubscription: false,
-                message: 'Usos esgotados',
-                usagesLeft: 0,
-                totalUsages: maxUsages
+                hasTrial: false,
+                isFreeTrial: true,
+                message: 'Usos diários esgotados',
+                dailyUsagesLeft: 0
             };
         }
         
         return {
             hasTrial: true,
-            hasSubscription: false,
-            message: `${usagesLeft} usos restantes`,
-            usagesLeft: usagesLeft,
-            totalUsages: maxUsages,
-            usageCount: currentUsage
+            isFreeTrial: true,
+            message: `Free Trial - ${dailyUsage.dailyUsagesLeft}/5 usos hoje`,
+            dailyUsagesLeft: dailyUsage.dailyUsagesLeft,
+            usageCount: dailyUsage.dailyUsageCount
         };
         
     } catch (error) {
         console.error('❌ Erro ao verificar status:', error);
         return { 
-            hasTrial: false, 
-            hasSubscription: false,
+            hasTrial: false,
             message: 'Erro ao verificar',
-            usagesLeft: 0
+            dailyUsagesLeft: 0
         };
     }
+}
+
+// ⭐⭐ NOVO MÉTODO: Calcular uso diário
+async getDailyUsage(trial, dailyLimit) {
+    if (!trial) return { dailyUsageCount: 0, dailyUsagesLeft: 0, lastUsageDate: null };
+    
+    const today = new Date().toISOString().split('T')[0];
+    const lastUsageDate = trial.last_usage_date ? new Date(trial.last_usage_date).toISOString().split('T')[0] : null;
+    
+    let dailyUsageCount = trial.daily_usage_count || 0;
+    
+    // ⭐⭐ RESETAR se for um novo dia
+    if (lastUsageDate !== today) {
+        dailyUsageCount = 0;
+        console.log('🔄 Novo dia - Resetando contador diário');
+        
+        // Atualizar no banco para resetar
+        await this.supabase
+            .from('user_trials')
+            .update({ 
+                daily_usage_count: 0,
+                last_usage_date: today
+            })
+            .eq('id', trial.id);
+    }
+    
+    const dailyUsagesLeft = Math.max(0, dailyLimit - dailyUsageCount);
+    
+    return {
+        dailyUsageCount: dailyUsageCount,
+        dailyUsagesLeft: dailyUsagesLeft,
+        lastUsageDate: lastUsageDate
+    };
 }
 
     selectTemplate(e) {
@@ -1368,6 +1460,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
