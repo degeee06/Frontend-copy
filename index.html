@@ -308,6 +308,28 @@
         </div>
     </footer>
 
+    
+<script>
+    // Verificar se veio de um pagamento bem-sucedido
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('paymentSuccess') === 'true') {
+            // Remover parâmetro da URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Mostrar mensagem de sucesso
+            setTimeout(() => {
+                alert('🎉 Parabéns! Sua assinatura foi ativada!\n\nAgora você tem acesso ilimitado ao Coupiator Pro!');
+                
+                // Atualizar badge se estiver logado
+                if (window.copyCraft && window.copyCraft.user) {
+                    window.copyCraft.updateTrialBadge();
+                }
+            }, 1000);
+        }
+    });
+</script>
+    
     <script src="script.js"></script>
     <script>
         feather.replace();
@@ -328,6 +350,7 @@
     </script>
 </body>
 </html>
+
 
 
 
