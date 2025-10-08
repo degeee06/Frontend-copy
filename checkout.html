@@ -23,114 +23,68 @@
 <body class="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                        <i data-feather="zap" class="text-white w-4 h-4"></i>
-                    </div>
-                    <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        Coupiator Pro
-                    </span>
-                </div>
-                <a href="index.html" class="text-gray-600 hover:text-purple-600 font-medium">
-                    ← Voltar
-                </a>
-            </div>
+        <!-- Conteúdo Principal -->
+<div class="container mx-auto px-4 py-16">
+    <div class="max-w-2xl mx-auto"> <!-- ⭐⭐ MUDADO: max-w-4xl para max-w-2xl -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Faça Upgrade para Pro</h1>
+            <p class="text-xl text-gray-600">Desbloqueie todo o potencial da Coupiator Pro</p>
         </div>
-    </header>
-
-    <!-- Conteúdo Principal -->
-    <div class="container mx-auto px-4 py-16">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-12">
-                <h1 class="text-4xl font-bold text-gray-800 mb-4">Faça Upgrade para Pro</h1>
-                <p class="text-xl text-gray-600">Desbloqueie todo o potencial da Coupiator Pro</p>
+        
+        <!-- ⭐⭐ REMOVIDO: grid md:grid-cols-2 e plano Enterprise -->
+        <!-- Plano Pro -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-purple-500 transform hover:scale-105 transition duration-300 max-w-md mx-auto"> <!-- ⭐⭐ ADICIONADO: max-w-md mx-auto -->
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Plano Pro</h3>
+                <div class="text-4xl font-bold text-purple-600 mb-4">
+                    R$ 30,00<span class="text-lg text-gray-500">/mês</span>
+                </div>
             </div>
             
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Plano Pro -->
-                <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-purple-500 transform hover:scale-105 transition duration-300">
-                    <div class="text-center mb-6">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Plano Pro</h3>
-                        <div class="text-4xl font-bold text-purple-600 mb-4">
-                            R$ 30,00<span class="text-lg text-gray-500">/mês</span>
-                        </div>
-                    </div>
-                    
-                    <ul class="space-y-4 mb-8">
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Geração ilimitada de conteúdo</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Todos os templates disponíveis</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Suporte prioritário 24/7</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Exportação em PDF e Word</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Atualizações gratuitas</span>
-                        </li>
-                    </ul>
-                    
-                    <!-- BOTÃO CORRETO PARA HOTMART -->
-                    <button onclick="processHotmartPayment()" 
-                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg">
-                        🚀 Assinar Agora - R$ 30,00/mês
-                    </button>
-                    
-                    <p class="text-center text-gray-500 text-sm mt-4">
-                        Cancelamento a qualquer momento • 7 dias de garantia
-                    </p>
-                </div>
-                    
-                    <ul class="space-y-4 mb-8">
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Todos os benefícios do Pro</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Até 5 usuários</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>API personalizada</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Treinamento dedicado</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i data-feather="check" class="text-green-500 mr-3"></i>
-                            <span>Suporte por telefone</span>
-                        </li>
-                    </ul>
-                    
-                   
+            <ul class="space-y-4 mb-8">
+                <li class="flex items-center">
+                    <i data-feather="check" class="text-green-500 mr-3"></i>
+                    <span>Geração ilimitada de conteúdo</span>
+                </li>
+                <li class="flex items-center">
+                    <i data-feather="check" class="text-green-500 mr-3"></i>
+                    <span>Todos os templates disponíveis</span>
+                </li>
+                <li class="flex items-center">
+                    <i data-feather="check" class="text-green-500 mr-3"></i>
+                    <span>Suporte prioritário 24/7</span>
+                </li>
+                <li class="flex items-center">
+                    <i data-feather="check" class="text-green-500 mr-3"></i>
+                    <span>Atualizações gratuitas</span>
+                </li>
+            </ul>
+            
+            <!-- BOTÃO CORRETO PARA HOTMART -->
+            <button onclick="processHotmartPayment()" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg">
+                🚀 Assinar Agora - R$ 30,00/mês
+            </button>
+            
+            <p class="text-center text-gray-500 text-sm mt-4">
+                Cancelamento a qualquer momento • 7 dias de garantia
+            </p>
+        </div>
 
-            <!-- Garantia -->
-            <div class="text-center mt-12">
-                <div class="bg-white rounded-2xl shadow-sm p-6 max-w-2xl mx-auto">
-                    <div class="flex items-center justify-center mb-4">
-                        <i data-feather="shield" class="text-green-500 w-8 h-8 mr-3"></i>
-                        <h3 class="text-xl font-bold text-gray-800">Garantia de 7 Dias</h3>
-                    </div>
-                    <p class="text-gray-600">
-                        Experimente o Coupiator Pro sem riscos por 7 dias.
-                    </p>
+        <!-- Garantia -->
+        <div class="text-center mt-12">
+            <div class="bg-white rounded-2xl shadow-sm p-6 max-w-2xl mx-auto">
+                <div class="flex items-center justify-center mb-4">
+                    <i data-feather="shield" class="text-green-500 w-8 h-8 mr-3"></i>
+                    <h3 class="text-xl font-bold text-gray-800">Garantia de 7 Dias</h3>
                 </div>
+                <p class="text-gray-600">
+                    Experimente o Coupiator Pro sem riscos por 7 dias.
+                </p>
             </div>
         </div>
     </div>
+</div>
 
     <script>
         // ⭐⭐ PRODUÇÃO - INTEGRAÇÃO HOTMART ⭐⭐
