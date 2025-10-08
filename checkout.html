@@ -147,6 +147,20 @@
         </div>
     </div>
 
+
+function processHotmartPayment() {
+    const HOTMART_PRODUCT_CODE = "V102294085N";
+    
+    // ⭐⭐ ADICIONAR parâmetros de redirecionamento
+    const userEmail = copyCraft.user ? copyCraft.user.email : '';
+    const redirectUrl = `${window.location.origin}/index.html?paymentSuccess=true`;
+    
+    const checkoutUrl = `https://pay.hotmart.com/${HOTMART_PRODUCT_CODE}?checkoutMode=2&callback=${encodeURIComponent(redirectUrl)}`;
+    
+    console.log('🔄 Redirecionando para Hotmart...');
+    window.location.href = checkoutUrl;
+}
+    
 <script>
 // ⭐⭐ PRODUÇÃO - INTEGRAÇÃO HOTMART ⭐⭐
 function processHotmartPayment() {
