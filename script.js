@@ -647,21 +647,32 @@ showDailyLimitModal(dailyLimit) {
     }
 }
 
-// ⭐⭐ NOVO MÉTODO: Calcular uso diário
+// ⭐⭐ MÉTODO MAIS SIMPLES: Sempre buscar dados frescos
 async getDailyUsage(trial, dailyLimit) {
     if (!trial) return { dailyUsageCount: 0, dailyUsagesLeft: 0, lastUsageDate: null };
     
+    // ⭐⭐ SEMPRE buscar dados atualizados do banco
+    const { data: freshTrial, error } = await this.supabase
+        .from('user_trials')
+        .select('daily_usage_count, last_usage_date')
+        .eq('id', trial.id)
+        .single();
+    
+    if (error) {
+        console.error('❌ Erro ao buscar dados atualizados:', error);
+        return { dailyUsageCount: 0, dailyUsagesLeft: 0, lastUsageDate: null };
+    }
+    
     const today = new Date().toISOString().split('T')[0];
-    const lastUsageDate = trial.last_usage_date ? new Date(trial.last_usage_date).toISOString().split('T')[0] : null;
+    const lastUsageDate = freshTrial.last_usage_date ? new Date(freshTrial.last_usage_date).toISOString().split('T')[0] : null;
     
-    let dailyUsageCount = trial.daily_usage_count || 0;
+    let dailyUsageCount = freshTrial.daily_usage_count || 0;
     
-    // ⭐⭐ RESETAR se for um novo dia
+    // Resetar se for novo dia
     if (lastUsageDate !== today) {
         dailyUsageCount = 0;
         console.log('🔄 Novo dia - Resetando contador diário');
         
-        // Atualizar no banco para resetar
         await this.supabase
             .from('user_trials')
             .update({ 
@@ -672,6 +683,8 @@ async getDailyUsage(trial, dailyLimit) {
     }
     
     const dailyUsagesLeft = Math.max(0, dailyLimit - dailyUsageCount);
+    
+    console.log(`📊 Uso diário: ${dailyUsageCount}/${dailyLimit} | Restantes: ${dailyUsagesLeft}`);
     
     return {
         dailyUsageCount: dailyUsageCount,
@@ -1461,6 +1474,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
