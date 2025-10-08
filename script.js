@@ -904,7 +904,7 @@ async debugTrial() {
                     Faça upgrade para continuar gerando conteúdos incríveis!
                 </p>
                 <div class="space-y-3">
-                    <button onclick="copyCraft.upgradeToPro()" 
+                    <button onclick="window.copyCraft.upgradeToPro()"
                             class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
                         🚀 Assinar Agora - R$ 29,90/mês
                     </button>
@@ -921,9 +921,9 @@ async debugTrial() {
 
     // MÉTODO PARA UPGRADE (placeholder)
     upgradeToPro() {
-        alert('Redirecionando para página de assinatura...');
-        // Ex: window.location.href = '/checkout.html';
-    }
+    console.log('🔄 Redirecionando para página de checkout...');
+    window.location.href = 'checkout.html';
+}
 
     async callDeepSeekAPI() {
         const contentInput = document.getElementById('contentInput');
@@ -1322,6 +1322,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
