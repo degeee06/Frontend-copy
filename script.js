@@ -116,19 +116,30 @@ class CopyCraftPro {
         }
     }
 
-    async updateTrialBadge() {
-        const trialBadge = document.getElementById('trialBadge');
-        if (!trialBadge) return;
-        
+   async updateTrialBadge() {
+    const trialBadge = document.getElementById('trialBadge');
+    if (!trialBadge) {
+        console.log('❌ trialBadge não encontrado');
+        return;
+    }
+    
+    try {
+        // ⭐⭐ FORÇAR refresh dos dados
         const trialStatus = await this.checkTrialStatus();
+        
         if (trialStatus.hasTrial) {
             trialBadge.textContent = `🎯 ${trialStatus.usagesLeft}/5`;
             trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+            console.log('🔄 Badge atualizado para:', trialBadge.textContent);
         } else {
             trialBadge.textContent = '💔 Expirado';
             trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+            console.log('🔄 Badge atualizado para: Expirado');
         }
+    } catch (error) {
+        console.error('❌ Erro ao atualizar badge:', error);
     }
+}
 
     initializeEventListeners() {
         // Template generation form
@@ -415,19 +426,21 @@ async debugTrial() {
         
         console.log(`🎯 Novo uso: ${currentUsage} → ${newUsageCount}/${maxUsages}`);
         
-        // ⭐⭐ CORREÇÃO: Bloquear em 5 usos exatos
+        // Verificar se atingiu o limite
         if (newUsageCount >= maxUsages) {
             console.log('🚫 Limite de usos atingido');
             
             await this.supabase
                 .from('user_trials')
                 .update({
-                    usage_count: maxUsages, // ⭐⭐ Não deixar passar de 5
+                    usage_count: maxUsages,
                     status: 'expired',
                     ended_at: new Date().toISOString()
                 })
                 .eq('id', trial.id);
             
+            // ⭐⭐ ATUALIZAR UI IMEDIATAMENTE
+            await this.updateTrialBadge();
             return false;
         }
         
@@ -446,10 +459,8 @@ async debugTrial() {
         
         console.log('✅ UPDATE executado com sucesso');
         
-        // Aguardar e verificar a atualização
-        setTimeout(async () => {
-            await this.updateTrialBadge();
-        }, 1000);
+        // ⭐⭐ CORREÇÃO: Atualizar UI IMEDIATAMENTE
+        await this.updateTrialBadge();
         
         return true;
         
@@ -1311,6 +1322,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
