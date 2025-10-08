@@ -81,12 +81,11 @@
                         </li>
                     </ul>
                     
-                    <!-- NO checkout.html - SUBSTITUA o botão atual por este: -->
-<button onclick="processHotmartPayment()" 
-        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg">
-    🚀 Assinar Agora - R$ 30,00/mês
-</button>
-       
+                    <!-- BOTÃO CORRETO PARA HOTMART -->
+                    <button onclick="processHotmartPayment()" 
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg">
+                        🚀 Assinar Agora - R$ 30,00/mês
+                    </button>
                     
                     <p class="text-center text-gray-500 text-sm mt-4">
                         Cancelamento a qualquer momento • 7 dias de garantia
@@ -147,89 +146,63 @@
         </div>
     </div>
 
-
-function processHotmartPayment() {
-    const HOTMART_PRODUCT_CODE = "V102294085N";
-    
-    // ⭐⭐ ADICIONAR parâmetros de redirecionamento
-    const userEmail = copyCraft.user ? copyCraft.user.email : '';
-    const redirectUrl = `${window.location.origin}/index.html?paymentSuccess=true`;
-    
-    const checkoutUrl = `https://pay.hotmart.com/${HOTMART_PRODUCT_CODE}?checkoutMode=2&callback=${encodeURIComponent(redirectUrl)}`;
-    
-    console.log('🔄 Redirecionando para Hotmart...');
-    window.location.href = checkoutUrl;
-}
-    
-<script>
-// ⭐⭐ PRODUÇÃO - INTEGRAÇÃO HOTMART ⭐⭐
-function processHotmartPayment() {
-    // ⭐⭐ SEU PRODUCT CODE REAL ⭐⭐
-    const HOTMART_PRODUCT_CODE = "V102294085N";
-    
-    // ⭐⭐ URL OFICIAL HOTMART ⭐⭐
-    const checkoutUrl = `https://pay.hotmart.com/${HOTMART_PRODUCT_CODE}?checkoutMode=2`;
-    
-    // Redirecionar para checkout oficial
-    window.location.href = checkoutUrl;
-}
-
-// ⭐⭐ VERIFICAR STATUS APÓS PAGAMENTO ⭐⭐
-function checkPaymentStatus() {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    if (urlParams.get('purchaseStatus') === 'APPROVED') {
-        showSuccessMessage();
-    }
-}
-
-function showSuccessMessage() {
-    document.querySelector('main').innerHTML = `
-        <div class="max-w-2xl mx-auto text-center py-16">
-            <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i data-feather="check" class="text-green-600 w-12 h-12"></i>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">🎉 Parabéns!</h1>
-            <p class="text-xl text-gray-600 mb-8">Sua assinatura foi ativada com sucesso!</p>
-            <div class="bg-green-50 border border-green-200 rounded-2xl p-6 mb-8">
-                <p class="text-green-800 mb-4">✅ Agora você tem acesso completo ao Coupiator Pro</p>
-                <p class="text-green-700">Acesse sua conta e comece a gerar conteúdos incríveis!</p>
-            </div>
-            <button onclick="window.location.href = 'templates.html'" 
-                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
-                🚀 Começar a Usar
-            </button>
-        </div>
-    `;
-    feather.replace();
-}
-
-// Executar ao carregar
-document.addEventListener('DOMContentLoaded', function() {
-    checkPaymentStatus();
-    feather.replace();
-});
-</script>
-    
     <script>
-        // Inicializar feather icons
-        feather.replace();
-        
-        // Processar pagamento
-        function processPayment() {
-            alert('🚀 Redirecionando para processamento de pagamento...\n\nEm uma implementação real, aqui integraríamos com:\n- Stripe\n- Mercado Pago\n- PagSeguro\n\nPor enquanto, esta é uma demonstração.');
+        // ⭐⭐ PRODUÇÃO - INTEGRAÇÃO HOTMART ⭐⭐
+        function processHotmartPayment() {
+            // ⭐⭐ SEU PRODUCT CODE REAL ⭐⭐
+            const HOTMART_PRODUCT_CODE = "V102294085N";
             
-            // Simular sucesso após 2 segundos
-            setTimeout(() => {
-                alert('🎉 Parabéns! Sua assinatura foi ativada!\n\nAgora você tem acesso completo ao Coupiator Pro.');
-                window.location.href = 'index.html';
-            }, 2000);
+            // ⭐⭐ URL OFICIAL HOTMART COM REDIRECIONAMENTO ⭐⭐
+            const redirectUrl = `${window.location.origin}/index.html?paymentSuccess=true`;
+            const checkoutUrl = `https://pay.hotmart.com/${HOTMART_PRODUCT_CODE}?checkoutMode=2&callback=${encodeURIComponent(redirectUrl)}`;
+            
+            console.log('🔄 Redirecionando para Hotmart...');
+            window.location.href = checkoutUrl;
         }
-        
+
+        // ⭐⭐ VERIFICAR STATUS APÓS PAGAMENTO ⭐⭐
+        function checkPaymentStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('paymentSuccess') === 'true') {
+                showSuccessMessage();
+            }
+        }
+
+        function showSuccessMessage() {
+            // Criar modal de sucesso
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white p-8 rounded-2xl max-w-md w-full mx-4 text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-feather="check" class="text-green-600 w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">🎉 Parabéns!</h3>
+                    <p class="text-gray-600 mb-6">Sua assinatura foi ativada com sucesso!</p>
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                        <p class="text-green-800 text-sm">✅ Agora você tem acesso completo ao Coupiator Pro</p>
+                    </div>
+                    <button onclick="window.location.href = 'templates.html'" 
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all">
+                        🚀 Começar a Usar
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            feather.replace();
+        }
+
         // Contatar vendas
         function contactSales() {
             alert('📞 Entraremos em contato para discutir suas necessidades empresariais!\n\nEmail: vendas@copycraftpro.com\nTelefone: (11) 99999-9999');
         }
+
+        // Executar ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            checkPaymentStatus();
+            feather.replace();
+        });
     </script>
 </body>
 </html>
