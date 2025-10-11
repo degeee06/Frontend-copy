@@ -293,68 +293,7 @@ async getUserSubscription() {
     }
 }
 
-    initializeEventListeners() {
-        // Template generation form
-        const generateForm = document.getElementById('generateForm');
-        console.log('🔍 generateForm encontrado?', !!generateForm);
-        
-        if (generateForm) {
-            generateForm.addEventListener('submit', (e) => {
-                console.log('🎯 FORM SUBMIT disparado!');
-                this.generateContent(e);
-            });
-        } else {
-            console.error('❌ generateForm NÃO ENCONTRADO!');
-        }
-
-        // Tone selection
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('tone-option')) {
-                this.selectTone(e);
-            }
-        });
-
-        // Copy and favorite buttons
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
-                this.copyToClipboard(e);
-            }
-            
-            if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
-                this.toggleFavorite(e);
-            }
-        });
-
-        // Template selection
-        const templateCards = document.querySelectorAll('.template-card');
-        templateCards.forEach(card => {
-            card.addEventListener('click', (e) => this.selectTemplate(e));
-        });
-
-        // Listener para o botão de login
-        const loginButton = document.getElementById('loginButton');
-        if (loginButton) {
-            loginButton.addEventListener('click', () => {
-                if (this.user) {
-                    this.logout();
-                } else {
-                    this.loginWithGoogle();
-                }
-            });
-        }
-
-        // Listeners para filtros e ordenação
-        const filterType = document.getElementById('filterType');
-        const sortBy = document.getElementById('sortBy');
-        
-        if (filterType) {
-            filterType.addEventListener('change', () => this.loadFavorites());
-        }
-        if (sortBy) {
-            sortBy.addEventListener('change', () => this.loadFavorites());
-        }
-    }
-
+   
     // MÉTODOS SUPABASE PARA FAVORITOS
     async saveFavoritesToSupabase() {
         if (!this.user) return;
@@ -1782,6 +1721,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
