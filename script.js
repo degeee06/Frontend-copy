@@ -1704,7 +1704,7 @@ feather.replace();
         };
         return labels[type] || 'Conteúdo';
     }
-}
+
 
 // Initialize the application
 const copyCraft = new CopyCraftPro();
@@ -1731,7 +1731,7 @@ function showSection(sectionId) {
     if (event && event.target) {
         event.target.classList.add('font-medium');
     }
-
+  }
 
 // Make functions globally available
 window.showSection = showSection;
