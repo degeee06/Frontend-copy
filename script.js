@@ -996,45 +996,51 @@ async getDailyUsage(trial, dailyLimit) {
         `;
     }
 
-    getFacebookForm() {
-        return `
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-gray-700 mb-2 font-medium">Produto/Serviço</label>
-                    <input type="text" id="contentInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" 
-                           placeholder="Descreva o que você está anunciando..." required>
-                </div>
-                <div>
-                    <label class="block text-gray-700 mb-2 font-medium">Público-Alvo</label>
-                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" 
-                           placeholder="Ex: Mulheres 25-40 anos, interessadas em fitness">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-gray-700 mb-2 font-medium">Objetivo</label>
-                        <select id="styleSelect" class="w-full p-3 border border-gray-300 rounded-lg">
-                            <option value="vendas">Vendas</option>
-                            <option value="leads">Leads</option>
-                            <option value="trafico">Tráfego</option>
-                            <option value="engajamento">Engajamento</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 mb-2 font-medium">Tom de Voz</label>
-                        <div class="flex flex-wrap gap-2" id="toneSelector">
-                            <span class="tone-option bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm cursor-pointer" data-tone="persuasivo">Persuasivo</span>
-                            <span class="tone-option bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm cursor-pointer" data-tone="urgente">Urgente</span>
-                            <span class="tone-option bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm cursor-pointer" data-tone="profissional">Profissional</span>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition duration-300 flex items-center justify-center">
-                    <i data-feather="zap" class="w-4 h-4 mr-2"></i>
-                    Gerar Anúncio com IA
-                </button>
+   // ✅ EXEMPLO: Facebook Form melhorado
+getFacebookForm() {
+    return `
+        <div class="space-y-6">
+            <div>
+                <label class="block text-gray-700 mb-2 font-medium">Produto/Serviço</label>
+                <input type="text" id="contentInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" 
+                       placeholder="Descreva o que você está anunciando..." required>
             </div>
-        `;
-    }
+            <div>
+                <label class="block text-gray-700 mb-2 font-medium">Público-Alvo</label>
+                <input type="text" data-field="targetAudience" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" 
+                       placeholder="Ex: Mulheres 25-40 anos, interessadas em fitness">
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-2 font-medium">Diferencial Principal</label>
+                <input type="text" data-field="keyFeatures" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" 
+                       placeholder="Ex: Resultados em 30 dias, preço acessível">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 mb-2 font-medium">Objetivo</label>
+                    <select id="styleSelect" class="w-full p-3 border border-gray-300 rounded-lg">
+                        <option value="vendas">Vendas</option>
+                        <option value="leads">Leads</option>
+                        <option value="trafico">Tráfego</option>
+                        <option value="engajamento">Engajamento</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2 font-medium">Tom de Voz</label>
+                    <div class="flex flex-wrap gap-2" id="toneSelector">
+                        <span class="tone-option bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm cursor-pointer" data-tone="persuasivo">Persuasivo</span>
+                        <span class="tone-option bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm cursor-pointer" data-tone="urgente">Urgente</span>
+                        <span class="tone-option bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm cursor-pointer" data-tone="profissional">Profissional</span>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition duration-300 flex items-center justify-center">
+                <i data-feather="zap" class="w-4 h-4 mr-2"></i>
+                Gerar Anúncio com IA
+            </button>
+        </div>
+    `;
+}
 
     getEcommerceForm() {
         return `
@@ -1250,6 +1256,56 @@ async getDailyUsage(trial, dailyLimit) {
         feather.replace();
     }
 
+   // ✅ ADICIONE este método para prompts mais inteligentes:
+buildEnhancedPrompt(userInput, style, tone, template, context = {}) {
+    const basePrompt = `Você é um expert em copywriting e marketing digital. 
+Siga EXATAMENTE estas regras:
+
+1. Idioma: Português do Brasil
+2. Formato: ${this.getFormatInstructions(template)}
+3. Estilo: ${style}
+4. Tom: ${tone}
+5. Objetivo: ${this.getTemplateObjective(template)}
+
+CONTEXTO ADICIONAL:
+- Público-alvo: ${context.targetAudience || 'Não especificado'}
+- Diferenciais: ${context.keyFeatures || 'Não especificados'}
+- Palavras-chave: ${context.keywords || 'Não especificadas'}
+
+TEMA PRINCIPAL: "${userInput}"
+
+IMPORTANTE:
+- Seja específico e evite clichês
+- Use linguagem natural e persuasiva
+- Inclua elementos de storytelling quando apropriado
+- Gere conteúdo ORIGINAL e não genérico`;
+
+    return basePrompt;
+}
+
+getFormatInstructions(template) {
+    const formats = {
+        instagram: '3 opções de legenda, cada uma com 2-3 parágrafos, incluindo emojis estratégicos e 3-5 hashtags relevantes no final',
+        facebook: 'Título (até 40 caracteres) + Texto persuasivo (até 150 caracteres) + CTA clara',
+        ecommerce: 'Título atrativo + Descrição com benefícios + Lista de características + CTA',
+        email: 'Assunto persuasivo (até 60 caracteres) + Corpo do email com saudação, conteúdo principal e CTA',
+        blog: '5 títulos criativos e atraentes, cada um com abordagem diferente',
+        google: 'Título 1 + Título 2 + Descrição (até 90 caracteres) + Path'
+    };
+    return formats[template] || 'Texto persuasivo e bem estruturado';
+}
+
+getTemplateObjective(template) {
+    const objectives = {
+        instagram: 'Gerar engajamento (likes, comentários, saves)',
+        facebook: 'Converter em cliques ou vendas',
+        ecommerce: 'Persuadir a compra do produto',
+        email: 'Gerar abertura e clique no email',
+        blog: 'Chamar atenção e gerar cliques',
+        google: 'Maximizar CTR (Taxa de Clique)'
+    };
+    return objectives[template] || 'Comunicação persuasiva';
+}
     // MODAL DE TRIAL EXPIRADO
     showTrialExpiredModal() {
         const modal = document.createElement('div');
@@ -1286,100 +1342,132 @@ async getDailyUsage(trial, dailyLimit) {
     window.location.href = 'checkout.html';
 }
 
-    async callDeepSeekAPI() {
-        const contentInput = document.getElementById('contentInput');
-        const styleSelect = document.getElementById('styleSelect');
-        const toneSelector = document.getElementById('toneSelector');
-        
-        const userInput = contentInput ? contentInput.value : '';
-        const style = styleSelect ? styleSelect.value : 'engajamento';
-        const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
-        const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
+   // ✅ ADICIONE no callDeepSeekAPI:
+async callDeepSeekAPI() {
+    const contentInput = document.getElementById('contentInput');
+    const styleSelect = document.getElementById('styleSelect');
+    const toneSelector = document.getElementById('toneSelector');
+    
+    const userInput = contentInput ? contentInput.value : '';
+    const style = styleSelect ? styleSelect.value : 'engajamento';
+    const activeTone = toneSelector ? toneSelector.querySelector('.bg-purple-100') : null;
+    const tone = activeTone ? activeTone.dataset.tone : 'descontraido';
 
-        const prompt = this.buildPrompt(userInput, style, tone);
+    // ✅ CAPTURAR CONTEXTO ADICIONAL DOS FORMS
+    const additionalContext = this.getAdditionalContext();
+    
+    const prompt = this.buildEnhancedPrompt(userInput, style, tone, this.currentTemplate, additionalContext);
 
-        const response = await fetch('https://backend-copy-1e16.onrender.com/api/generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                prompt: prompt,
-                template: this.currentTemplate
-            })
-        });
+    const response = await fetch('https://backend-copy-1e16.onrender.com/api/generate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: prompt,
+            template: this.currentTemplate,
+            context: additionalContext // ✅ ENVIAR CONTEXTO EXTRA
+        })
+    });
 
-        if (!response.ok) {
-            throw new Error(`Backend Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.content;
+    if (!response.ok) {
+        throw new Error(`Backend Error: ${response.status}`);
     }
 
-    buildPrompt(userInput, style, tone) {
-        const templatePrompts = {
-            instagram: `Gere 3 opções de legenda para Instagram sobre: "${userInput}"
-Estilo: ${style}
-Tom de voz: ${tone}
+    const data = await response.json();
+    return data.content;
+}
 
-Formato desejado:
-1. [Legenda com emojis e hashtags]
-2. [Legenda com emojis e hashtags] 
-3. [Legenda com emojis e hashtags]
+// ✅ NOVO: Capturar contexto adicional dos forms
+getAdditionalContext() {
+    const context = {
+        targetAudience: this.getFormFieldValue('targetAudience'),
+        productPrice: this.getFormFieldValue('productPrice'), 
+        keyFeatures: this.getFormFieldValue('keyFeatures'),
+        keywords: this.getFormFieldValue('keywords'),
+        approach: this.getFormFieldValue('approach')
+    };
+    return context;
+}
 
-Inclua hashtags relevantes no final de cada opção.`,
+getFormFieldValue(fieldName) {
+    const element = document.querySelector(`[data-field="${fieldName}"]`);
+    return element ? element.value : '';
+}
+   // ✅ SUBSTITUA o buildPrompt atual por este:
+buildPrompt(userInput, style, tone, template) {
+    const promptTemplates = {
+        instagram: `Atue como um expert em marketing digital para Instagram. 
+Gere 3 opções de legenda em português do Brasil sobre: "${userInput}"
 
-            facebook: `Gere um anúncio para Facebook Ads sobre: "${userInput}"
-Estilo: ${style} 
-Tom de voz: ${tone}
+DIRETRIZES:
+- Estilo: ${style} (${this.getStyleDescription(style)})
+- Tom: ${tone} (${this.getToneDescription(tone)})
+- Incluir 3-5 hashtags relevantes no final
+- Usar emojis estratégicos
+- Chamadas para ação claras
 
-Formato desejado:
-Título: [Título impactante]
-Texto: [Texto persuasivo com CTA]
-CTA: [Chamada para ação]`,
+FORMATO:
+1. [Legenda criativa com storytelling]
+2. [Legenda direta e persuasiva] 
+3. [Legenda educativa/informativa]
 
-            ecommerce: `Gere uma descrição de produto para e-commerce sobre: "${userInput}"
-Estilo: ${style}
-Tom de voz: ${tone}
+NÃO inclua marcadores como "1.", "2." - apenas o texto das legendas.`,
 
-Formato desejado:
-Título: [Título atrativo]
-Descrição: [Descrição detalhada com benefícios]
-Características: [Lista de características principais]`,
+        facebook: `Atue como um copywriter especialista em Facebook Ads.
+Gere um anúncio completo em português do Brasil sobre: "${userInput}"
 
-            email: `Gere um email de marketing sobre: "${userInput}"
-Estilo: ${style}
-Tom de voz: ${tone}
+COMPONENTES:
+- Título impactante (máx 40 caracteres)
+- Texto persuasivo com problema-solução-benefício
+- CTA (Chamada para Ação) clara
+- Tom: ${tone}
+- Estilo: ${style}
 
-Formato desejado:
-Assunto: [Assunto persuasivo]
-Corpo: [Texto do email com saudação, conteúdo principal e CTA]`,
+FORMATO:
+Título: [seu título aqui]
+Texto: [seu texto persuasivo aqui]
+CTA: [sua chamada para ação aqui]`,
 
-            google: `Gere um anúncio para Google Ads sobre: "${userInput}"
-Estilo: ${style}
-Tom de voz: ${tone}
+        ecommerce: `Atue como um copywriter especialista em e-commerce.
+Gere uma descrição de produto persuasiva em português do Brasil.
 
-Formato desejado:
-Título 1: [Título principal]
-Título 2: [Título secundário]
-Descrição: [Descrição persuasiva]
-Path: [categoria/produto]`,
+PRODUTO: "${userInput}"
+CARACTERÍSTICAS: [capturar do form se possível]
+TOM: ${tone}
+PÚBLICO: [adicionar contexto do form]
 
-            blog: `Gere 5 títulos atraentes para blog post sobre: "${userInput}"
-Estilo: ${style}
-Tom de voz: ${tone}
+ESTRUTURA:
+- Título atrativo
+- Descrição com benefícios (não só características)
+- Lista de features principais
+- Garantia/confiança
+- CTA para compra`
+    };
 
-Formato desejado:
-1. [Título atraente]
-2. [Título atraente]
-3. [Título atraente]
-4. [Título atraente]
-5. [Título atraente]`
-        };
+    return promptTemplates[template] || promptTemplates.instagram;
+}
 
-        return templatePrompts[this.currentTemplate] || templatePrompts.instagram;
-    }
+// ✅ ADICIONE estes métodos auxiliares:
+getStyleDescription(style) {
+    const descriptions = {
+        'engajamento': 'foco em likes, comentários e compartilhamentos',
+        'venda': 'persuasivo com foco em conversão',
+        'educativo': 'informativo e que ensina algo',
+        'divertido': 'leve, humorístico e descontraído'
+    };
+    return descriptions[style] || '';
+}
+
+getToneDescription(tone) {
+    const descriptions = {
+        'descontraido': 'linguagem casual e próxima',
+        'formal': 'linguagem profissional e respeitosa', 
+        'inspirador': 'motivacional e emocional',
+        'persuasivo': 'focado em convencer o leitor'
+    };
+    return descriptions[tone] || '';
+}
 
     generateSampleContent() {
         const samples = {
@@ -1751,6 +1839,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
