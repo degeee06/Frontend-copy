@@ -1693,7 +1693,7 @@ feather.replace();
         return colors[type] || 'text-gray-600';
     }
 
-    getTypeLabel(type) {
+     getTypeLabel(type) {
         const labels = {
             instagram: 'Legenda Instagram',
             facebook: 'Anúncio Facebook',
@@ -1704,7 +1704,7 @@ feather.replace();
         };
         return labels[type] || 'Conteúdo';
     }
-
+} 
 
 // Initialize the application
 const copyCraft = new CopyCraftPro();
@@ -1736,6 +1736,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
