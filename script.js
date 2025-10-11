@@ -12,16 +12,17 @@ class CopyCraftPro {
         this.init();
     }
 
-    async init() { 
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
-        
-        await this.checkAuthState();
-        this.initializeEventListeners();
-        await this.loadFavorites();
+   async init() { 
+    if (typeof feather !== 'undefined') {
+        feather.replace();
     }
-
+    
+    await this.checkAuthState();
+    this.initializeEventListeners();
+    await this.loadFavorites();
+    this.loadDraft(); // ✅ NOVO: Carregar rascunho
+    this.startAutoSave(); // ✅ NOVO: Iniciar auto-save
+}
     async checkAuthState() {
         const { data: { user } } = await this.supabase.auth.getUser();
         if (user) {
@@ -46,35 +47,158 @@ class CopyCraftPro {
         }
     }
 
-    async loginWithGoogle() {
-        const loginButton = document.getElementById('loginButton');
-        const originalText = loginButton.innerHTML;
-        
-        // Loading state
-        loginButton.innerHTML = '<i data-feather="loader" class="animate-spin w-4 h-4 mr-2"></i>Conectando...';
-        loginButton.disabled = true;
-        feather.replace();
+   async loginWithGoogle() {
+    const loginButton = document.getElementById('loginButton');
+    const originalText = loginButton.innerHTML;
+    
+    try {
+        // Loading state melhorado
+        this.setLoading(loginButton, true, 'Conectando...');
 
-        try {
-            const { data, error } = await this.supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: 'https://frontend-copy-ten.vercel.app'
+        const { data, error } = await this.supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent'
                 }
-            });
-            
-            if (error) throw error;
-            
-        } catch (error) {
-            console.error('Erro no login:', error);
-            alert('Erro ao fazer login com Google');
-            
-            // Restore button
-            loginButton.innerHTML = originalText;
-            loginButton.disabled = false;
-            feather.replace();
+            }
+        });
+        
+        if (error) {
+            console.error('❌ Erro detalhado no login:', error);
+            throw new Error(this.getFriendlyErrorMessage(error));
         }
+        
+        console.log('✅ Login iniciado com sucesso');
+        
+    } catch (error) {
+        console.error('Erro no login:', error);
+        
+        // ✅ MELHORIA: Feedback visual mais amigável
+        this.showToast(error.message || 'Erro ao fazer login com Google', 'error');
+        
+        // Restore button
+        this.setLoading(loginButton, false);
+        loginButton.innerHTML = originalText;
     }
+}
+
+// ✅ NOVO: Sistema de Toast Notifications
+showToast(message, type = 'info', duration = 4000) {
+    // Remove toast existente
+    const existingToast = document.getElementById('copycraft-toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.id = 'copycraft-toast';
+    toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    toast.innerHTML = `
+        <div class="flex items-center">
+            <i data-feather="${
+                type === 'error' ? 'alert-triangle' :
+                type === 'success' ? 'check-circle' : 
+                type === 'warning' ? 'alert-circle' : 'info'
+            }" class="w-5 h-5 mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    if (typeof feather !== 'undefined') feather.replace();
+    
+    // Animar entrada
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-full');
+    }, duration - 300);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, duration);
+}
+
+    // ✅ NOVO: Métodos utilitários para loading states
+setLoading(element, isLoading, loadingText = 'Carregando...') {
+    if (isLoading) {
+        element.dataset.originalText = element.innerHTML;
+        element.innerHTML = `<i data-feather="loader" class="animate-spin w-4 h-4 mr-2"></i>${loadingText}`;
+        element.disabled = true;
+    } else {
+        element.innerHTML = element.dataset.originalText;
+        element.disabled = false;
+    }
+    if (typeof feather !== 'undefined') feather.replace();
+}
+
+// ✅ MELHORADO: Generate Content com tratamento melhorado
+async generateContent(e) {
+    e.preventDefault();
+    
+    if (!this.user) {
+        this.showToast('⚠️ Faça login para gerar conteúdos!', 'warning');
+        this.loginWithGoogle();
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    this.setLoading(submitBtn, true, 'Gerando com IA...');
+    
+    try {
+        // ✅ VERIFICAÇÃO DE CONEXÃO
+        if (!navigator.onLine) {
+            throw new Error('Sem conexão com a internet');
+        }
+        
+        const canUse = await this.registerUsage();
+        if (!canUse) {
+            this.showTrialExpiredModal();
+            return;
+        }
+        
+        if (!this.currentTemplate) {
+            throw new Error('Selecione um template primeiro');
+        }
+        
+        const content = await this.callDeepSeekAPI();
+        this.displayGeneratedContent(content);
+        this.showToast('Conteúdo gerado com sucesso!', 'success');
+        
+    } catch (error) {
+        console.error('Error generating content:', error);
+        
+        // ✅ FALLBACK inteligente
+        const sampleContent = this.generateSampleContent();
+        this.displayGeneratedContent(sampleContent);
+        
+        this.showToast(
+            error.message === 'Sem conexão com a internet' 
+                ? 'Modo offline: conteúdo de exemplo gerado'
+                : 'Usando conteúdo de exemplo (erro na API)',
+            'warning'
+        );
+    } finally {
+        this.setLoading(submitBtn, false);
+    }
+}
+// ✅ NOVO: Método para mensagens de erro amigáveis
+getFriendlyErrorMessage(error) {
+    const errorMap = {
+        'invalid_credentials': 'Email ou senha incorretos',
+        'email_not_confirmed': 'Confirme seu email antes de fazer login',
+        'user_already_exists': 'Usuário já existe',
+        'weak_password': 'Senha muito fraca',
+        'network_error': 'Erro de conexão. Verifique sua internet'
+    };
+    return errorMap[error.message] || error.message || 'Erro desconhecido';
+}
 
     async logout() {
         const { error } = await this.supabase.auth.signOut();
@@ -253,32 +377,168 @@ async getUserSubscription() {
         }
     }
 
-    async loadFavoritesFromSupabase() {
-        if (!this.user) {
+   // ✅ MELHORADO: Load Favorites com cache
+async loadFavoritesFromSupabase() {
+    if (!this.user) {
+        this.favorites = [];
+        return;
+    }
+    
+    // ✅ CACHE: Verificar se já temos em cache
+    const cacheKey = `favorites_${this.user.id}`;
+    if (this.cache.has(cacheKey)) {
+        this.favorites = this.cache.get(cacheKey);
+        console.log('✅ Favoritos carregados do cache');
+        return;
+    }
+    
+    try {
+        const { data, error } = await this.supabase
+            .from('user_favorites')
+            .select('favorites')
+            .eq('user_id', this.user.id)
+            .single();
+            
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        if (data && data.favorites) {
+            this.favorites = data.favorites;
+            // ✅ SALVAR NO CACHE
+            this.cache.set(cacheKey, this.favorites);
+            console.log('✅ Favoritos carregados do Supabase e cacheados');
+        } else {
             this.favorites = [];
-            return;
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar favoritos:', error);
+        this.favorites = [];
+    }
+}
+
+// ✅ MELHORADO: Initialize Event Listeners com monitor de conexão
+initializeEventListeners() {
+    // Template generation form
+    const generateForm = document.getElementById('generateForm');
+    console.log('🔍 generateForm encontrado?', !!generateForm);
+    
+    if (generateForm) {
+        generateForm.addEventListener('submit', (e) => {
+            console.log('🎯 FORM SUBMIT disparado!');
+            this.generateContent(e);
+        });
+    } else {
+        console.error('❌ generateForm NÃO ENCONTRADO!');
+    }
+
+    // Tone selection
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tone-option')) {
+            this.selectTone(e);
+        }
+    });
+
+    // Copy and favorite buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
+            this.copyToClipboard(e);
         }
         
-        try {
-            const { data, error } = await this.supabase
-                .from('user_favorites')
-                .select('favorites')
-                .eq('user_id', this.user.id)
-                .single();
-                
-            if (error && error.code !== 'PGRST116') throw error;
-            
-            if (data && data.favorites) {
-                this.favorites = data.favorites;
-                console.log('✅ Favoritos carregados do Supabase');
-            } else {
-                this.favorites = [];
-            }
-        } catch (error) {
-            console.error('❌ Erro ao carregar favoritos:', error);
-            this.favorites = [];
+        if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
+            this.toggleFavorite(e);
         }
+    });
+
+    // Template selection
+    const templateCards = document.querySelectorAll('.template-card');
+    templateCards.forEach(card => {
+        card.addEventListener('click', (e) => this.selectTemplate(e));
+    });
+
+    // Listener para o botão de login
+    const loginButton = document.getElementById('loginButton');
+    if (loginButton) {
+        loginButton.addEventListener('click', () => {
+            if (this.user) {
+                this.logout();
+            } else {
+                this.loginWithGoogle();
+            }
+        });
     }
+
+    // Listeners para filtros e ordenação
+    const filterType = document.getElementById('filterType');
+    const sortBy = document.getElementById('sortBy');
+    
+    if (filterType) {
+        filterType.addEventListener('change', () => this.loadFavorites());
+    }
+    if (sortBy) {
+        sortBy.addEventListener('change', () => this.loadFavorites());
+    }
+    
+    // ✅ NOVO: Monitorar conexão
+    window.addEventListener('online', () => {
+        this.isOnline = true;
+        this.showToast('Conexão restaurada', 'success');
+        // Recarregar dados quando voltar online
+        this.loadFavorites();
+    });
+    
+    window.addEventListener('offline', () => {
+        this.isOnline = false;
+        this.showToast('Modo offline ativado', 'warning');
+    });
+}
+    // ✅ NOVO: Sistema de auto-save de rascunhos
+startAutoSave() {
+    // Salvar rascunho a cada 30 segundos
+    this.autoSaveInterval = setInterval(() => {
+        this.saveDraft();
+    }, 30000);
+    
+    // Salvar também quando o usuário sair da página
+    window.addEventListener('beforeunload', () => this.saveDraft());
+}
+
+saveDraft() {
+    const contentInput = document.getElementById('contentInput');
+    if (contentInput && contentInput.value.trim()) {
+        const draft = {
+            content: contentInput.value,
+            template: this.currentTemplate,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(this.draftKey, JSON.stringify(draft));
+        console.log('💾 Rascunho salvo automaticamente');
+    }
+}
+
+loadDraft() {
+    try {
+        const draft = JSON.parse(localStorage.getItem(this.draftKey));
+        if (draft) {
+            const contentInput = document.getElementById('contentInput');
+            if (contentInput && draft.content) {
+                contentInput.value = draft.content;
+                // Restaurar template se necessário
+                if (draft.template && !this.currentTemplate) {
+                    this.currentTemplate = draft.template;
+                }
+                this.showToast('Rascunho recuperado', 'info');
+                console.log('📝 Rascunho carregado:', draft);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar rascunho:', error);
+    }
+}
+
+// ✅ NOVO: Limpar rascunho quando conteúdo for gerado com sucesso
+clearDraft() {
+    localStorage.removeItem(this.draftKey);
+    console.log('🗑️ Rascunho limpo');
+}
 
  async startTrial() {
     if (!this.user) return;
@@ -1220,28 +1480,72 @@ Formato desejado:
         feather.replace();
     }
 
-    copyToClipboard(e) {
-        const button = e.target.classList.contains('btn-copy') ? e.target : e.target.closest('.btn-copy');
-        const content = button.dataset.content;
+   // ✅ MELHORADO: Copy to Clipboard com análise
+async copyToClipboard(e) {
+    const button = e.target.classList.contains('btn-copy') ? e.target : e.target.closest('.btn-copy');
+    const content = button.dataset.content;
+    
+    try {
+        await navigator.clipboard.writeText(content);
         
-        navigator.clipboard.writeText(content).then(() => {
-            // Visual feedback
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i data-feather="check" class="w-4 h-4 mr-2"></i>Copiado!';
-            button.classList.remove('bg-purple-600');
-            button.classList.add('bg-green-600');
-            
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.classList.remove('bg-green-600');
-                button.classList.add('bg-purple-600');
-                feather.replace();
-            }, 2000);
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-            alert('Erro ao copiar para a área de transferência.');
-        });
+        // ✅ ANÁLISE DE CONTEÚDO
+        this.analyzeCopiedContent(content);
+        
+        // Feedback visual melhorado
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i data-feather="check" class="w-4 h-4 mr-2"></i>Copiado!';
+        button.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+        button.classList.add('bg-green-600', 'hover:bg-green-700');
+        
+        this.showToast('Conteúdo copiado para a área de transferência!', 'success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('bg-green-600', 'hover:bg-green-700');
+            button.classList.add('bg-purple-600', 'hover:bg-purple-700');
+            if (typeof feather !== 'undefined') feather.replace();
+        }, 2000);
+        
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        this.showToast('Erro ao copiar. Tente novamente.', 'error');
     }
+}
+
+// ✅ NOVO: Método de análise de conteúdo
+analyzeCopiedContent(content) {
+    const analysis = {
+        length: content.length,
+        hasEmojis: /[\u{1F600}-\u{1F64F}]/u.test(content),
+        hasHashtags: /#\w+/.test(content),
+        lineCount: content.split('\n').length,
+        wordCount: content.split(/\s+/).filter(word => word.length > 0).length,
+        charCount: content.replace(/\s/g, '').length
+    };
+    
+    console.log('📊 Análise do conteúdo copiado:', analysis);
+    
+    // ✅ SALVAR ESTATÍSTICAS (opcional - para analytics futuro)
+    this.saveContentStats(analysis);
+}
+
+// ✅ NOVO: Salvar estatísticas (placeholder para implementação futura)
+saveContentStats(analysis) {
+    // Aqui você pode enviar para analytics ou salvar no Supabase
+    const stats = JSON.parse(localStorage.getItem('copycraft_stats') || '[]');
+    stats.push({
+        ...analysis,
+        timestamp: new Date().toISOString(),
+        template: this.currentTemplate
+    });
+    
+    // Manter apenas os últimos 100 registros
+    if (stats.length > 100) {
+        stats.shift();
+    }
+    
+    localStorage.setItem('copycraft_stats', JSON.stringify(stats));
+}
 
     async toggleFavorite(e) {
         const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
