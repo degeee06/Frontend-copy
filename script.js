@@ -1651,11 +1651,26 @@ document.querySelectorAll('.delete-favorite').forEach(btn => {
 // ⭐⭐ AGORA SIM: Processar os ícones Feather
 feather.replace();
 }
-    deleteFavorite(id) {
-        this.favorites = this.favorites.filter(fav => fav.id !== id);
-        this.saveFavorites();
-        this.loadFavorites();
+   deleteFavorite(id) {
+    console.log('🗑️ Deletando favorito ID:', id);
+    
+    // Remover dos favoritos locais
+    this.favorites = this.favorites.filter(fav => fav.id !== id);
+    
+    // ✅ CORREÇÃO: LIMPAR O CACHE
+    if (this.user) {
+        const cacheKey = `favorites_${this.user.id}`;
+        this.cache.delete(cacheKey); // ⬅️ REMOVER DO CACHE
+        console.log('🗑️ Cache limpo para recarregar favoritos');
     }
+    
+    // Salvar no Supabase
+    this.saveFavorites().then(() => {
+        // ✅ CORREÇÃO: Forçar recarregamento SEM cache
+        this.loadFavorites();
+        this.showToast('Favorito excluído com sucesso!', 'success');
+    });
+}
 
     getTypeColor(type) {
         const colors = {
@@ -1736,6 +1751,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
