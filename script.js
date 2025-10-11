@@ -1650,7 +1650,7 @@ document.querySelectorAll('.delete-favorite').forEach(btn => {
 
 // ⭐⭐ AGORA SIM: Processar os ícones Feather
 feather.replace();
-
+}
     deleteFavorite(id) {
         this.favorites = this.favorites.filter(fav => fav.id !== id);
         this.saveFavorites();
@@ -1731,11 +1731,12 @@ function showSection(sectionId) {
     if (event && event.target) {
         event.target.classList.add('font-medium');
     }
-}
+
 
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
