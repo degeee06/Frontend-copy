@@ -1,16 +1,22 @@
 class CopyCraftPro {
-    constructor() {
-        this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
-        this.currentTemplate = null;
-        
-        // Configuração do Supabase Auth
-        this.supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co';
-        this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ';
-        this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseAnonKey);
-        
-        this.user = null;
-        this.init();
-    }
+   constructor() {
+    this.favorites = JSON.parse(localStorage.getItem('copycraftFavorites')) || [];
+    this.currentTemplate = null;
+    
+    // ✅ CORREÇÃO: MOVER cache para ANTES do init
+    this.cache = new Map(); // ⬅️ LINHA CRÍTICA - deve vir ANTES
+    this.isOnline = navigator.onLine;
+    this.draftKey = 'copycraft_draft';
+    this.autoSaveInterval = null;
+    
+    // Configuração do Supabase Auth
+    this.supabaseUrl = 'https://xwhjsrtekupveprdvuei.supabase.co';
+    this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3aGpzcnRla3VwdmVwcmR2dWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2OTA1NTgsImV4cCI6MjA3NTI2NjU1OH0.L7TjEi-6j8tWu-nCRsypISFjKpWDQO0r4_aykXo33VQ';
+    this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseAnonKey);
+    
+    this.user = null;
+    this.init(); // ⬅️ init() usa this.cache, então cache deve vir ANTES
+}
 
    async init() { 
     if (typeof feather !== 'undefined') {
@@ -1721,6 +1727,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
