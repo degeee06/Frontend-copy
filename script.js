@@ -1634,13 +1634,21 @@ saveContentStats(analysis) {
         feather.replace();
 
         // Add event listeners for delete buttons
-        document.querySelectorAll('.delete-favorite').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = parseInt(e.currentTarget.dataset.id);
-                this.deleteFavorite(id);
-            });
-        });
-    }
+       // ✅ SUBSTITUA esta parte no loadFavorites():
+// Add event listeners for delete buttons
+document.querySelectorAll('.delete-favorite').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const id = parseInt(e.currentTarget.dataset.id);
+        console.log('🗑️ Tentando deletar favorito ID:', id);
+        
+        if (id && confirm('Tem certeza que deseja excluir este favorito?')) {
+            this.deleteFavorite(id);
+        }
+    });
+});
 
     deleteFavorite(id) {
         this.favorites = this.favorites.filter(fav => fav.id !== id);
@@ -1727,6 +1735,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
