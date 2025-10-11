@@ -1603,38 +1603,36 @@ saveContentStats(analysis) {
             return;
         }
 
-        favoritesGrid.innerHTML = filteredFavorites.map(fav => `
-            <div class="copy-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition duration-300">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 ${this.getTypeColor(fav.type)} rounded-full flex items-center justify-center mr-3">
-                            <i data-feather="${this.getTypeIcon(fav.type)}" class="${this.getTypeIconColor(fav.type)} w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">${this.getTypeLabel(fav.type)}</h3>
-                            <p class="text-sm text-gray-500">${fav.date}</p>
-                        </div>
-                    </div>
-                    <button class="text-gray-400 hover:text-red-500 delete-favorite" data-id="${fav.id}">
-                        <i data-feather="trash-2" class="w-5 h-5"></i>
-                    </button>
+       favoritesGrid.innerHTML = filteredFavorites.map(fav => `
+    <div class="copy-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition duration-300">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <div class="w-10 h-10 ${this.getTypeColor(fav.type)} rounded-full flex items-center justify-center mr-3">
+                    <i data-feather="${this.getTypeIcon(fav.type)}" class="${this.getTypeIconColor(fav.type)} w-5 h-5"></i>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg mb-4 max-h-32 overflow-y-auto">
-                    <p class="text-gray-700 whitespace-pre-line">${fav.content}</p>
-                </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${fav.type}</span>
-                    <button class="btn-copy text-purple-600 hover:text-purple-800 font-medium" data-content="${fav.content.replace(/"/g, '&quot;')}">
-                        Copiar
-                    </button>
+                <div>
+                    <h3 class="font-bold">${this.getTypeLabel(fav.type)}</h3>
+                    <p class="text-sm text-gray-500">${fav.date}</p>
                 </div>
             </div>
-        `).join('');
+            <button class="text-gray-400 hover:text-red-500 delete-favorite" data-id="${fav.id}">
+                <i data-feather="trash-2" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg mb-4 max-h-32 overflow-y-auto">
+            <p class="text-gray-700 whitespace-pre-line">${fav.content}</p>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${fav.type}</span>
+            <button class="btn-copy text-purple-600 hover:text-purple-800 font-medium" data-content="${fav.content.replace(/"/g, '&quot;')}">
+                Copiar
+            </button>
+        </div>
+    </div>
+`).join('');
 
-        feather.replace();
+// ⭐⭐ CORREÇÃO: PRIMEIRO os event listeners, DEPOIS feather.replace()
 
-        // Add event listeners for delete buttons
-       // ✅ SUBSTITUA esta parte no loadFavorites():
 // Add event listeners for delete buttons
 document.querySelectorAll('.delete-favorite').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1649,6 +1647,9 @@ document.querySelectorAll('.delete-favorite').forEach(btn => {
         }
     });
 });
+
+// ⭐⭐ AGORA SIM: Processar os ícones Feather
+feather.replace();
 
     deleteFavorite(id) {
         this.favorites = this.favorites.filter(fav => fav.id !== id);
@@ -1735,6 +1736,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
