@@ -29,36 +29,39 @@ class CopyCraftPro {
     this.loadDraft(); // ✅ NOVO: Carregar rascunho
     this.startAutoSave(); // ✅ NOVO: Iniciar auto-save
 }
-    async checkAuthState() {
-        const { data: { user } } = await this.supabase.auth.getUser();
-        if (user) {
-            this.user = user;
-            this.updateAuthUI();
-            console.log('✅ Usuário logado:', user.email);
-            
-            // Iniciar trial automaticamente
-            try {
-                const trial = await this.startTrial();
-                if (trial) {
-                    console.log('🎉 Trial ativado para usuário');
-                }
-            } catch (error) {
-                console.error('❌ Erro ao iniciar trial:', error);
+   // ✅ CORREÇÃO 1: Modificar o checkAuthState para atualizar a UI
+async checkAuthState() {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (user) {
+        this.user = user;
+        this.updateAuthUI();
+        console.log('✅ Usuário logado:', user.email);
+        
+        // Iniciar trial automaticamente
+        try {
+            const trial = await this.startTrial();
+            if (trial) {
+                console.log('🎉 Trial ativado para usuário');
+                // ✅ ATUALIZAÇÃO IMEDIATA DA UI
+                await this.updateTrialBadge();
             }
-        } else {
-            console.log('❌ Usuário não logado');
-            this.user = null;
-            this.favorites = [];
-            this.updateAuthUI();
+        } catch (error) {
+            console.error('❌ Erro ao iniciar trial:', error);
         }
+    } else {
+        console.log('❌ Usuário não logado');
+        this.user = null;
+        this.favorites = [];
+        this.updateAuthUI();
     }
+}
 
-   async loginWithGoogle() {
+// ✅ CORREÇÃO 4: Modificar o loginWithGoogle para chamar a atualização
+async loginWithGoogle() {
     const loginButton = document.getElementById('loginButton');
     const originalText = loginButton.innerHTML;
     
     try {
-        // Loading state melhorado
         this.setLoading(loginButton, true, 'Conectando...');
 
         const { data, error } = await this.supabase.auth.signInWithOAuth({
@@ -79,13 +82,15 @@ class CopyCraftPro {
         
         console.log('✅ Login iniciado com sucesso');
         
+        // ✅ AGUARDAR E ATUALIZAR
+        setTimeout(async () => {
+            await this.checkAuthState();
+            await this.forceRefreshTrialStatus();
+        }, 2000);
+        
     } catch (error) {
         console.error('Erro no login:', error);
-        
-        // ✅ MELHORIA: Feedback visual mais amigável
         this.showToast(error.message || 'Erro ao fazer login com Google', 'error');
-        
-        // Restore button
         this.setLoading(loginButton, false);
         loginButton.innerHTML = originalText;
     }
@@ -274,28 +279,38 @@ async getUserSubscription() {
 }
 
     
-  async updateTrialBadge() {
+// ✅ CORREÇÃO 5: Melhorar o updateTrialBadge com fallback
+async updateTrialBadge() {
     const trialBadge = document.getElementById('trialBadge');
-    if (!trialBadge) return;
+    if (!trialBadge) {
+        console.log('❌ trialBadge não encontrado');
+        return;
+    }
     
-    const status = await this.checkTrialStatus();
-    
-    if (status.unlimited) {
-        trialBadge.textContent = '🚀 Premium';
-        trialBadge.className = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full ml-2';
-    } else if (status.isPremiumTrial) {
-        // ⭐⭐ CORREÇÃO: Calcular USADOS (15 - restantes)
-        const used = 15 - status.dailyUsagesLeft;
-        trialBadge.textContent = `🎯 ${used}/15`;
-        trialBadge.className = 'bg-blue-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-    } else if (status.hasTrial) {
-        // ⭐⭐ CORREÇÃO: Calcular USADOS (5 - restantes)
-        const used = 5 - status.dailyUsagesLeft;
-        trialBadge.textContent = `📝 ${used}/5`;
-        trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
-    } else {
-        trialBadge.textContent = '💔 Sem usos';
-        trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+    try {
+        const status = await this.checkTrialStatus();
+        
+        if (status.unlimited) {
+            trialBadge.textContent = '🚀 Premium';
+            trialBadge.className = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full ml-2';
+        } else if (status.isPremiumTrial) {
+            const used = 15 - status.dailyUsagesLeft;
+            trialBadge.textContent = `🎯 ${used}/15`;
+            trialBadge.className = 'bg-blue-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+        } else if (status.hasTrial) {
+            const used = 5 - status.dailyUsagesLeft;
+            trialBadge.textContent = `📝 ${used}/5`;
+            trialBadge.className = 'bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+        } else {
+            trialBadge.textContent = '💔 Sem usos';
+            trialBadge.className = 'bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2';
+        }
+        
+        console.log('✅ Badge atualizado:', trialBadge.textContent);
+    } catch (error) {
+        console.error('❌ Erro ao atualizar badge:', error);
+        trialBadge.textContent = '❌ Erro';
+        trialBadge.className = 'bg-gray-500 text-white text-xs px-2 py-1 rounded-full ml-2';
     }
 }
 
@@ -485,10 +500,14 @@ clearDraft() {
     console.log('🗑️ Rascunho limpo');
 }
 
- async startTrial() {
+async startTrial() {
     if (!this.user) return;
     
     try {
+        // ✅ LIMPAR CACHE ao iniciar trial
+        const cacheKey = `trial_${this.user.id}`;
+        this.cache.delete(cacheKey);
+        
         // Buscar trial existente
         const existingTrial = await this.getUserTrial();
         
@@ -509,12 +528,18 @@ clearDraft() {
                         })
                         .eq('id', existingTrial.id);
                 }
+                
+                // ✅ ATUALIZAR BADGE IMEDIATAMENTE
+                setTimeout(() => this.updateTrialBadge(), 300);
                 return existingTrial;
             }
             
             // Se o trial está ativo, manter
             if (existingTrial.status === 'active') {
                 console.log('🔄 Trial ativo mantido com usos atuais');
+                
+                // ✅ ATUALIZAR BADGE IMEDIATAMENTE
+                setTimeout(() => this.updateTrialBadge(), 300);
                 return existingTrial;
             }
             
@@ -533,20 +558,51 @@ clearDraft() {
                     .single();
                     
                 if (error) throw error;
+                
+                // ✅ ATUALIZAR BADGE IMEDIATAMENTE
+                setTimeout(() => this.updateTrialBadge(), 300);
                 return data;
             }
             
+            // ✅ ATUALIZAR BADGE IMEDIATAMENTE (fallback)
+            setTimeout(() => this.updateTrialBadge(), 300);
             return existingTrial;
         }
         
         // Só criar novo trial se não existir nenhum
         console.log('🔄 Criando NOVO trial...');
-        return await this.createNewTrial();
+        const newTrial = await this.createNewTrial();
+        
+        // ✅ ATUALIZAR BADGE APÓS CRIAR NOVO TRIAL
+        if (newTrial) {
+            setTimeout(() => this.updateTrialBadge(), 500);
+        }
+        
+        return newTrial;
         
     } catch (error) {
         console.error('❌ Erro ao iniciar trial:', error);
+        
+        // ✅ ATUALIZAR BADGE MESMO EM CASO DE ERRO
+        setTimeout(() => this.updateTrialBadge(), 300);
         return null;
     }
+}
+
+   async forceRefreshTrialStatus() {
+    if (!this.user) return;
+    
+    // Limpar todos os caches relacionados ao usuário
+    const trialCacheKey = `trial_${this.user.id}`;
+    const favoritesCacheKey = `favorites_${this.user.id}`;
+    
+    this.cache.delete(trialCacheKey);
+    this.cache.delete(favoritesCacheKey);
+    
+    // Recarregar status do trial
+    await this.updateTrialBadge();
+    
+    console.log('🔄 Status do trial atualizado forçadamente');
 }
     
 async createNewTrial() {
@@ -1839,6 +1895,7 @@ function showSection(sectionId) {
 // Make functions globally available
 window.showSection = showSection;
 window.copyCraft = copyCraft;
+
 
 
 
